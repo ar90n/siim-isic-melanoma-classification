@@ -19,7 +19,7 @@ def get_config() -> Config:
     learning_rate = float(os.environ.get("KAGGLE_LEARNING_RATE", 0.008))
     num_workers = int(os.environ.get("KAGGLE_NUM_WORKERS", 4))
     max_epochs = int(os.environ.get("KAGGLE_MAX_EPOCHS", 4))
-    gpus = int(os.environ.get("KAGGLE_GPUS", 8))
+    gpus = int(os.environ.get("KAGGLE_GPUS", 1))
     precision = int(os.environ.get("KAGGLE_PRECISION", 16))
     max_data_size = os.environ.get("KAGGLE_MAX_DATASIZE")
     if max_data_size is not None:
