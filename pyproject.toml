@@ -30,7 +30,7 @@ jupytext = "^1.5.1"
 enable_git_tag = true
 
 [tool.kkt.meta_data]
-code_file = "script/baseline_efficientnet.ipynb"
+code_file = "runner/baseline_efficientnet.ipynb"
 competition = "siim-isic-melanoma-classification"
 competition_sources = ["siim-isic-melanoma-classification"]
 dataset_sources = ["cdeotte/jpeg-melanoma-256x256", "nroman/melanoma-hairs"]
