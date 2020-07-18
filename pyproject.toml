@@ -38,7 +38,7 @@ enable_constraint = false
 enable_gpu = true
 enable_internet = true
 is_private = true
-kernel_type = "nodebook"
+kernel_type = "notebook"
 slug = "siim-isic-melanoma-classification"
 
 [build-system]
