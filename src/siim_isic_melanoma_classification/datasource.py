@@ -16,7 +16,7 @@ class DataSource:
 def train_validate_split(
     source: DataSource, val_size: float
 ) -> Tuple[DataSource, DataSource]:
-    train_df, val_df = train_test_split(source.df, test_size=val_size)
+    train_df, val_df = train_test_split(source.df, test_size=val_size, shuffle=True)
     return DataSource(train_df, source.root), DataSource(val_df, source.root)
 
 
