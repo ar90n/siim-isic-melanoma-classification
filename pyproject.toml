@@ -17,6 +17,7 @@ scikit-learn = "^0.23.1"
 imageio = "^2.9.0"
 numpy = "^1.19.0"
 wandb = "^0.9.3"
+apex = {git = "https://github.com/NVIDIA/apex"}
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"

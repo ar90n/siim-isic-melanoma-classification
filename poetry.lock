@@ -10,6 +10,18 @@ version = "0.9.0"
 six = "*"
 
 [[package]]
+category = "main"
+description = ""
+name = "apex"
+optional = false
+python-versions = "*"
+version = "0.1"
+
+[package.source]
+reference = "3104fd59776a470a5dee3f0d5f3168cf9ab35b53"
+type = "git"
+url = "https://github.com/NVIDIA/apex"
+[[package]]
 category = "dev"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 name = "appdirs"
@@ -1808,13 +1820,14 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "2829d23a0ba53a575d86339896c68462fb6022ad1028ccada390bab90a8b7c09"
+content-hash = "3624562beceacee56c2bac2c84af74ec8ae5197cd92f27bda8f11cda10eafb86"
 python-versions = "^3.7"
 
 [metadata.files]
 absl-py = [
     {file = "absl-py-0.9.0.tar.gz", hash = "sha256:75e737d6ce7723d9ff9b7aa1ba3233c34be62ef18d5859e706b8fdc828989830"},
 ]
+apex = []
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},

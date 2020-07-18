@@ -5,6 +5,12 @@ from torch import optim
 from pytorch_lightning import Trainer
 from pytorch_lightning.core import LightningModule
 
+has_apex = True
+try:
+    import apex
+except ImportError:
+    has_apex = False
+
 from .config import Config
 
 
@@ -94,6 +100,6 @@ class Trainer(Trainer):
     def __init__(self, config: Config, **kwargs):
         if torch.cuda.is_available():
             kwargs["gpus"] = config.gpus
-            kwargs["precision"] = config.precision
+            kwargs["precision"] = config.precision if has_apex else 32
 
         super().__init__(max_epochs=config.max_epochs, **kwargs)
