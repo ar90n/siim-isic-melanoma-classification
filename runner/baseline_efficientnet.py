@@ -63,7 +63,8 @@ class Net(LightningModelBase):
     def forward(self, inputs):
         x, y = inputs
         x = self.backbone(x)
-        return torch.squeeze(x)
+        x = x[:,0]
+        return x
 
 
 # %%
@@ -136,6 +137,7 @@ with torch.no_grad():
 result = np.hstack(result)
 
 # %%
-sub = pd.read_csv("../input/siim-isic-melanoma-classification/sample_submission.csv")
-sub.iloc[: len(result)]["target"] = result
+sample_submission_path = util.get_input() / "siim-isic-melanoma-classification" / "sample_submission.csv"
+sub = pd.read_csv(sample_submission_path)
+sub["target"].iloc[:len(result)] = result
 sub.to_csv("submission.csv", index=False)
