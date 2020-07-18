@@ -124,7 +124,7 @@ trainer.fit(model, train_loader, val_loader)
 # model = torch.load(model_path)
 # gc.collect()
 device = util.get_device()
-model.eval()
+model.eval().to(device)
 result = []
 with torch.no_grad():
     for i, x_test in enumerate(test_loader):
