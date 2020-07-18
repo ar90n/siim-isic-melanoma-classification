@@ -23,7 +23,7 @@ apex = {git = "https://github.com/NVIDIA/apex"}
 black = "^19.10b0"
 isort = "^5.1.1"
 pppiv = "^0.1.2"
-kkt = "^0.3.3"
+kkt = "^0.3.4"
 jupyter = "^1.0.0"
 jupytext = "^1.5.1"
 
