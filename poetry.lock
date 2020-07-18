@@ -732,7 +732,7 @@ description = "A tool for kaggle kernel"
 name = "kkt"
 optional = false
 python-versions = ">=3.7,<4.0"
-version = "0.3.4"
+version = "0.3.5"
 
 [package.dependencies]
 click = ">=7.0,<8.0"
@@ -1820,7 +1820,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "43afc7d99bab64b07a584e6a6910d11b8646f3acd7a85a5b2eea9bc8a55f393b"
+content-hash = "69dd209f812f1be454596454ac98e49c686cdac343749e4d9d69582d3b89b4d8"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -2105,8 +2105,8 @@ keyring = [
     {file = "keyring-19.3.0.tar.gz", hash = "sha256:ee3d35b7f1ac3cb69e9a1e4323534649d3ab2fea402738a77e4250c152970fed"},
 ]
 kkt = [
-    {file = "kkt-0.3.4-py3-none-any.whl", hash = "sha256:4e84937ee9e21aa4eab2798012ab5e35636b40f34e8c188af62444a60052ba7f"},
-    {file = "kkt-0.3.4.tar.gz", hash = "sha256:b784d3189418ae14e6f37e9cfd54c4c029fd20f95a0728a0d858773c51eb9388"},
+    {file = "kkt-0.3.5-py3-none-any.whl", hash = "sha256:3fdcaa7e61365ea8ed6c8d8f45dd896e946dec720b7c7916ca16af6d8930464c"},
+    {file = "kkt-0.3.5.tar.gz", hash = "sha256:241ab2191ce30315496e38b1b9d289a32c1fca11e410e6194fd3628f181f3bd7"},
 ]
 lmdb = [
     {file = "lmdb-0.98-cp27-cp27m-win32.whl", hash = "sha256:45db7b7da2e0b7122f0a140c9fb99cd6fd4bb734106b3e9390cf7caef0cb48ee"},
