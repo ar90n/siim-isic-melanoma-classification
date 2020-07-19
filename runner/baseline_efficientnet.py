@@ -19,6 +19,7 @@
 
 # %%
 import torch
+from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torchtoolbox.transform as transforms
@@ -61,14 +62,26 @@ class Net(LightningModelBase):
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
         self.backbone = timm.create_model(
-            "efficientnet_b0", num_classes=1, pretrained=True
+            "efficientnet_b0", num_classes=500, pretrained=True
         )
+        self.meta = nn.Sequential(nn.Linear(9, 500),
+                                  nn.BatchNorm1d(500),
+                                  nn.ReLU(),
+                                  nn.Dropout(p=0.2),
+                                  nn.Linear(500, 250),  # FC layer output will have 250 features
+                                  nn.BatchNorm1d(250),
+                                  nn.ReLU(),
+                                  nn.Dropout(p=0.2))
+        self.ouput = nn.Linear(500 + 250, 1)
 
     def forward(self, inputs):
         x, y = inputs
         x = self.backbone(x)
-        x = x[:, 0]
-        return x
+        y = self.meta(y)
+        features = torch.cat((x, y), dim=1)
+        output = self.ouput(features)
+        output = output[:, 0]
+        return output 
 
 
 # %%
