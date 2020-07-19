@@ -14,8 +14,8 @@
 # ---
 
 # %%
-%load_ext autoreload
-%autoreload 2
+#%load_ext autoreload
+#%autoreload 2
 
 # %%
 import torch
@@ -74,7 +74,7 @@ class Net(LightningModelBase):
 # %%
 train_transform = transforms.Compose(
     [
-        transforms.RandomResizedCrop(size=256, scale=(0.8, 1.0)),
+        transforms.RandomResizedCrop(size=config.image_size, scale=(0.8, 1.0)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
         my_transforms.Microscope(p=0.5),
@@ -91,7 +91,7 @@ test_transform = transforms.Compose(
 
 
 # %%
-all_source, test_source = io.load_jpeg_melanoma(max_data_size=config.max_data_size)
+all_source, test_source = io.load_jpeg_melanoma(size=config.image_size, max_data_size=config.max_data_size)
 
 # %%
 test_loader = DataLoader(

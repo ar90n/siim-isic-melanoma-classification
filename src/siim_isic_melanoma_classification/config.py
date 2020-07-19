@@ -9,6 +9,7 @@ class Config:
     learning_rate: float
     num_workers: int
     max_epochs: int
+    image_size: int
     gpus: int
     tpus: Optional[int]
     precision: int
@@ -21,6 +22,7 @@ def get_config() -> Config:
     learning_rate = float(os.environ.get("KAGGLE_LEARNING_RATE", 0.008))
     num_workers = int(os.environ.get("KAGGLE_NUM_WORKERS", 4))
     max_epochs = int(os.environ.get("KAGGLE_MAX_EPOCHS", 4))
+    image_size = int(os.environ.get("KAGGLE_IMAGE_SIZE", 256))
     gpus = int(os.environ.get("KAGGLE_GPUS", 1))
     tpus = os.environ.get("KAGGLE_TPUS")
     if tpus is not None:
@@ -36,6 +38,7 @@ def get_config() -> Config:
         learning_rate,
         num_workers,
         max_epochs,
+        image_size,
         gpus,
         tpus,
         precision,
