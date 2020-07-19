@@ -149,3 +149,10 @@ runner/*.ipynb
 
 # wandb
 wandb
+
+# checkpoint
+*.ckpt
+
+# checkpoint
+*.csv
+
