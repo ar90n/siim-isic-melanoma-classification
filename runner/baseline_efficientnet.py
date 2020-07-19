@@ -20,7 +20,7 @@
 # %%
 import torch
 import torch.nn.functional as F
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from torch.utils.data import DataLoader
 import torchtoolbox.transform as transforms
 import pandas as pd
@@ -63,7 +63,7 @@ class Net(LightningModelBase):
     def forward(self, inputs):
         x, y = inputs
         x = self.backbone(x)
-        x = x[:,0]
+        x = x[:, 0]
         return x
 
 
@@ -118,7 +118,13 @@ model = Net(config)
 
 # %%
 checkpoint_callback = ModelCheckpoint(filepath=os.getcwd(), verbose=True)
-trainer = Trainer(config, logger=logger, checkpoint_callback=checkpoint_callback)
+early_stop_callback = EarlyStopping()
+trainer = Trainer(
+    config,
+    logger=logger,
+    checkpoint_callback=checkpoint_callback,
+    early_stop_callback=early_stop_callback,
+)
 trainer.fit(model, train_loader, val_loader)
 
 # %%
@@ -137,7 +143,9 @@ with torch.no_grad():
 result = np.hstack(result)
 
 # %%
-sample_submission_path = util.get_input() / "siim-isic-melanoma-classification" / "sample_submission.csv"
+sample_submission_path = (
+    util.get_input() / "siim-isic-melanoma-classification" / "sample_submission.csv"
+)
 sub = pd.read_csv(sample_submission_path)
-sub["target"].iloc[:len(result)] = result
+sub["target"].iloc[: len(result)] = result
 sub.to_csv("submission.csv", index=False)
