@@ -1,4 +1,5 @@
 import warnings
+from typing import Iterable
 from pathlib import Path
 import os
 import gc
@@ -32,6 +33,10 @@ def get_input() -> Path:
     return Path.cwd().parent / "input"
 
 
+def get_isic_melanoma_classification_root() -> Path:
+    return get_input() / "siim-isic-melanoma-classification"
+
+
 def get_jpeg_melanoma_root(size: int) -> Path:
     dataset_name = f"jpeg-melanoma-{size}x{size}"
     return get_input() / dataset_name
@@ -41,3 +46,16 @@ def clean_up():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     gc.collect()
+
+
+def to_device(tensors, device=None):
+    if device is None:
+        device = get_device()
+
+    if isinstance(tensors, Iterable):
+        ret = [t.to(device) for t in tensors]
+        if isinstance(tensors, tuple):
+            ret = tuple(ret)
+        return ret
+
+    return tensors.to(device)

@@ -2,7 +2,7 @@ from typing import Tuple
 import pandas as pd
 import numpy as np
 
-from .util import get_jpeg_melanoma_root
+from .util import get_jpeg_melanoma_root, get_isic_melanoma_classification_root
 from .datasource import DataSource
 
 
@@ -63,3 +63,12 @@ def load_jpeg_melanoma_dataframe(
     train_df["patient_id"] = train_df["patient_id"].fillna(0)
 
     return train_df, test_df
+
+
+def save_result(result: np.ndarray) -> None:
+    sample_submission_path = (
+        get_isic_melanoma_classification_root() / "sample_submission.csv"
+    )
+    sub = pd.read_csv(sample_submission_path)
+    sub["target"].iloc[: len(result)] = result
+    sub.to_csv("submission.csv", index=False)

@@ -11,6 +11,7 @@ class Config:
     max_epochs: int
     gpus: int
     precision: int
+    early_stop_patience: int
     max_data_size: Optional[int]
 
 
@@ -21,6 +22,7 @@ def get_config() -> Config:
     max_epochs = int(os.environ.get("KAGGLE_MAX_EPOCHS", 4))
     gpus = int(os.environ.get("KAGGLE_GPUS", 1))
     precision = int(os.environ.get("KAGGLE_PRECISION", 16))
+    early_stop_patience = int(os.environ.get("KAGGLE_EARLY_STOP_PATIENCE", 5))
     max_data_size = os.environ.get("KAGGLE_MAX_DATASIZE")
     if max_data_size is not None:
         max_data_size = int(max_data_size)
@@ -32,5 +34,6 @@ def get_config() -> Config:
         max_epochs,
         gpus,
         precision,
+        early_stop_patience,
         max_data_size,
     )

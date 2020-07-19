@@ -14,18 +14,14 @@
 # ---
 
 # %%
-#%load_ext autoreload
-#%autoreload 2
+%load_ext autoreload
+%autoreload 2
 
 # %%
 import torch
 import torch.nn.functional as F
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from torch.utils.data import DataLoader
 import torchtoolbox.transform as transforms
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import timm
 import os
 
@@ -36,10 +32,14 @@ from siim_isic_melanoma_classification import (
     transforms as my_transforms,
     datasource,
 )
-from siim_isic_melanoma_classification.config import Config, get_config
+from siim_isic_melanoma_classification.config import get_config
 from siim_isic_melanoma_classification.logger import get_logger
 from siim_isic_melanoma_classification.dataset import MelanomaDataset
-from siim_isic_melanoma_classification.lightning import LightningModelBase, Trainer
+from siim_isic_melanoma_classification.lightning import (
+    LightningModelBase,
+    Trainer,
+    Classifier,
+)
 
 # %%
 logger = get_logger()
@@ -117,35 +117,15 @@ val_loader = DataLoader(
 model = Net(config)
 
 # %%
-checkpoint_callback = ModelCheckpoint(filepath=os.getcwd(), verbose=True)
-early_stop_callback = EarlyStopping(patience=8, verbose=True)
-trainer = Trainer(
-    config,
-    logger=logger,
-    checkpoint_callback=checkpoint_callback,
-    early_stop_callback=early_stop_callback,
-)
+trainer = Trainer(config, logger=logger)
 trainer.fit(model, train_loader, val_loader)
 
 # %%
-model = torch.load(checkpoint_callback.best_model_path)
-util.cleanup()
-device = util.get_device()
-model.eval().to(device)
-result = []
-with torch.no_grad():
-    for i, x_test in enumerate(test_loader):
-        x_test[0] = x_test[0].to(device)
-        x_test[1] = x_test[1].to(device)
-        z_test = model(x_test)
-        z_test = torch.sigmoid(z_test)
-        result.append(z_test.cpu().numpy())
-result = np.hstack(result)
+model = Net.load_from_checkpoint(trainer.best_model_path)
 
 # %%
-sample_submission_path = (
-    util.get_input() / "siim-isic-melanoma-classification" / "sample_submission.csv"
-)
-sub = pd.read_csv(sample_submission_path)
-sub["target"].iloc[: len(result)] = result
-sub.to_csv("submission.csv", index=False)
+classifier = Classifier(model)
+result = classifier.predict(test_loader)
+
+# %%
+io.save_result(result)
