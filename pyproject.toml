@@ -42,6 +42,10 @@ is_private = true
 kernel_type = "notebook"
 slug = "siim-isic-melanoma-classification"
 
+  [tool.kkt.meta_data.baseline_en_b0_tpu]
+  enable_gpu = false
+
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
