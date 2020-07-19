@@ -42,10 +42,14 @@ from siim_isic_melanoma_classification.lightning import (
 )
 
 # %%
-logger = get_logger()
+config = get_config()
 
 # %%
-util.initialize()
+logger = get_logger()
+logger.log_hyperparams(config.__dict__)
+
+# %%
+util.initialize(config)
 if "KAGGLE_CONTAINER_NAME" in os.environ:
     import kaggle_timm_pretrained
 
@@ -85,9 +89,6 @@ test_transform = transforms.Compose(
     ]
 )
 
-# %%
-config = get_config()
-logger.log_hyperparams(config.__dict__)
 
 # %%
 all_source, test_source = io.load_jpeg_melanoma(max_data_size=config.max_data_size)

@@ -10,16 +10,7 @@ from pytorch_lightning.core import LightningModule
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
 from .config import Config
-from .util import clean_up, get_device, to_device
-
-try:
-    import apex
-
-    has_apex = True
-except ImportError:
-    has_apex = False
-
-from .config import Config
+from .util import clean_up, get_device, to_device, is_apex_available, is_tpu_available
 
 
 class LightningModelBase(LightningModule):
@@ -107,7 +98,11 @@ class Trainer(Trainer):
     def __init__(self, config: Config, **kwargs):
         if torch.cuda.is_available():
             kwargs["gpus"] = config.gpus
-            kwargs["precision"] = config.precision if has_apex else 32
+            kwargs["precision"] = config.precision if is_apex_available() else 32
+
+        if is_tpu_available():
+            kwargs["num_tpu_cores"] = config.tpus
+            kwargs["precision"] = config.precision
 
         if "checkpoint_callback" not in kwargs:
             kwargs["checkpoint_callback"] = ModelCheckpoint(
@@ -140,3 +135,4 @@ class Classifier:
                 y_hat = torch.sigmoid(logits)
                 result.append(y_hat.cpu().numpy())
         return np.hstack(result)
+

@@ -10,6 +10,7 @@ class Config:
     num_workers: int
     max_epochs: int
     gpus: int
+    tpus: Optional[int]
     precision: int
     early_stop_patience: int
     max_data_size: Optional[int]
@@ -21,6 +22,9 @@ def get_config() -> Config:
     num_workers = int(os.environ.get("KAGGLE_NUM_WORKERS", 4))
     max_epochs = int(os.environ.get("KAGGLE_MAX_EPOCHS", 4))
     gpus = int(os.environ.get("KAGGLE_GPUS", 1))
+    tpus = os.environ.get("KAGGLE_TPUS")
+    if tpus is not None:
+        tpus = int(tpus)
     precision = int(os.environ.get("KAGGLE_PRECISION", 16))
     early_stop_patience = int(os.environ.get("KAGGLE_EARLY_STOP_PATIENCE", 5))
     max_data_size = os.environ.get("KAGGLE_MAX_DATASIZE")
@@ -33,6 +37,7 @@ def get_config() -> Config:
         num_workers,
         max_epochs,
         gpus,
+        tpus,
         precision,
         early_stop_patience,
         max_data_size,
