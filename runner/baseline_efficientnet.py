@@ -128,8 +128,8 @@ trainer = Trainer(
 trainer.fit(model, train_loader, val_loader)
 
 # %%
-# model = torch.load(model_path)
-# gc.collect()
+model = torch.load(checkpoint_callback.best_model_path)
+util.cleanup()
 device = util.get_device()
 model.eval().to(device)
 result = []

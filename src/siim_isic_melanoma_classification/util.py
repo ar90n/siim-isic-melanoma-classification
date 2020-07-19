@@ -1,6 +1,7 @@
 import warnings
 from pathlib import Path
 import os
+import gc
 
 import torch
 from pytorch_lightning import seed_everything as pl_seed_evertything
@@ -34,3 +35,9 @@ def get_input() -> Path:
 def get_jpeg_melanoma_root(size: int) -> Path:
     dataset_name = f"jpeg-melanoma-{size}x{size}"
     return get_input() / dataset_name
+
+
+def clean_up():
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
