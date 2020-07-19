@@ -118,7 +118,7 @@ model = Net(config)
 
 # %%
 checkpoint_callback = ModelCheckpoint(filepath=os.getcwd(), verbose=True)
-early_stop_callback = EarlyStopping()
+early_stop_callback = EarlyStopping(patience=8, verbose=True)
 trainer = Trainer(
     config,
     logger=logger,
