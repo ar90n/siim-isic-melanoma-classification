@@ -62,7 +62,7 @@ class Net(LightningModelBase):
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
         self.backbone = timm.create_model(
-            "efficientnet_b0", num_classes=500, pretrained=True
+            "efficientnet_b3", num_classes=500, pretrained=True
         )
         self.meta = nn.Sequential(nn.Linear(9, 500),
                                   nn.BatchNorm1d(500),
