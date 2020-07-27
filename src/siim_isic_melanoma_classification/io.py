@@ -70,5 +70,5 @@ def save_result(result: np.ndarray) -> None:
         get_isic_melanoma_classification_root() / "sample_submission.csv"
     )
     sub = pd.read_csv(sample_submission_path)
-    sub["target"].iloc[: len(result)] = result
+    sub["target"].iloc[: len(result)] = result.reshape(-1)
     sub.to_csv("submission.csv", index=False)

@@ -43,6 +43,12 @@ from siim_isic_melanoma_classification.lightning import (
 )
 
 # %%
+if util.is_tpu_available():
+    from cloud_tpu_client import Client as TpuClient
+
+    TpuClient().configure_tpu_version("pytorch-nightly")
+
+# %%
 config = get_config()
 
 # %%
@@ -56,22 +62,23 @@ if "KAGGLE_CONTAINER_NAME" in os.environ:
 
     kaggle_timm_pretrained.patch()
 
-
 # %%
 class Net(LightningModelBase):
     def __init__(self, config, **kwargs):
         super().__init__(config, **kwargs)
         self.backbone = timm.create_model(
-            "efficientnet_b3", num_classes=500, pretrained=True
+            "efficientnet_b0", num_classes=500, pretrained=True
         )
-        self.meta = nn.Sequential(nn.Linear(9, 500),
-                                  nn.BatchNorm1d(500),
-                                  nn.ReLU(),
-                                  nn.Dropout(p=0.2),
-                                  nn.Linear(500, 250),  # FC layer output will have 250 features
-                                  nn.BatchNorm1d(250),
-                                  nn.ReLU(),
-                                  nn.Dropout(p=0.2))
+        self.meta = nn.Sequential(
+            nn.Linear(9, 500),
+            nn.BatchNorm1d(500),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(500, 250),  # FC layer output will have 250 features
+            nn.BatchNorm1d(250),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+        )
         self.ouput = nn.Linear(500 + 250, 1)
 
     def forward(self, inputs):
@@ -80,8 +87,7 @@ class Net(LightningModelBase):
         y = self.meta(y)
         features = torch.cat((x, y), dim=1)
         output = self.ouput(features)
-        output = output[:, 0]
-        return output 
+        return output.view(output.size(0), -1)
 
 
 # %%
@@ -104,7 +110,9 @@ test_transform = transforms.Compose(
 
 
 # %%
-all_source, test_source = io.load_jpeg_melanoma(size=config.image_size, max_data_size=config.max_data_size)
+all_source, test_source = io.load_jpeg_melanoma(
+    size=config.image_size, max_data_size=config.max_data_size
+)
 
 # %%
 test_loader = DataLoader(
@@ -120,12 +128,14 @@ train_loader = DataLoader(
     shuffle=True,
     batch_size=config.batch_size,
     num_workers=config.num_workers,
+    drop_last=util.is_tpu_available(),
 )
 val_loader = DataLoader(
     MelanomaDataset(val_source, train=True, transforms=train_transform),
     shuffle=True,
     batch_size=config.batch_size,
     num_workers=config.num_workers,
+    drop_last=util.is_tpu_available(),
 )
 # %%
 model = Net(config)
@@ -133,9 +143,12 @@ model = Net(config)
 # %%
 trainer = Trainer(config, logger=logger)
 trainer.fit(model, train_loader, val_loader)
+print("train finished")
 
 # %%
-model = Net.load_from_checkpoint(trainer.best_model_path)
+best_model_path = util.search_best_model_path(trainer.best_model_path)
+if best_model_path is not None:
+    model = Net.load_from_checkpoint(best_model_path)
 
 # %%
 classifier = Classifier(model)

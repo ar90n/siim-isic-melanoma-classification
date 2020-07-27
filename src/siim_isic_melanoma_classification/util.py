@@ -1,15 +1,15 @@
-import warnings
-from typing import Iterable
-from pathlib import Path
-import os
 import gc
-import subprocess
+import os
+import sys
+from typing import Optional
+import warnings
+from pathlib import Path
+from typing import Iterable
 
 import torch
 from pytorch_lightning import seed_everything as pl_seed_evertything
 
 from .config import Config
-
 
 try:
     import apex
@@ -20,10 +20,23 @@ except ImportError:
 
 try:
     import torch_xla
+    import torch_xla.core.xla_model as xm
 
     has_xla = True
 except ImportError:
     has_xla = False
+
+
+def get_python_type():
+    try:
+        from IPython.core.getipython import get_ipython
+
+        if "terminal" in get_ipython().__module__:
+            return "ipython"
+        else:
+            return "jupyter"
+    except (ImportError, NameError, AttributeError):
+        return "python"
 
 
 def seed_everything(seed: int = 47) -> None:
@@ -38,11 +51,31 @@ def seed_everything(seed: int = 47) -> None:
 def initialize(config: Config) -> None:
     warnings.simplefilter("ignore")
     seed_everything()
-    install_xla(config)
 
 
-def get_device():
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def is_apex_available() -> bool:
+    return torch.cuda.is_available() and has_apex
+
+
+def is_tpu_available() -> bool:
+    return has_xla and ("TPU_NAME" in os.environ)
+
+
+def is_kaggle() -> bool:
+    return "KAGGLE_URL_BASE" in os.environ
+
+
+def is_notebook() -> bool:
+    return get_python_type() == "jupyter"
+
+
+def get_device(n: Optional[int] = None):
+    if is_tpu_available():
+        return xm.xla_device(n=n, devkind="TPU")
+    elif torch.cuda.is_available():
+        return torch.device("cuda")
+    else:
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def get_input() -> Path:
@@ -80,34 +113,18 @@ def to_device(tensors, device=None):
     return tensors.to(device)
 
 
-def install_xla(config: Config, version="nightly"):
-    if config.tpus is None:
-        return
+def search_best_model_path(checkpoint_path: Optional[str]) -> Optional[str]:
+    if checkpoint_path is not None and checkpoint_path != "":
+        return checkpoint_path
 
-    global has_xla
-
-    curl_args = [
-        "curl",
-        "https://raw.githubusercontent.com/pytorch/xla/master/contrib/scripts/env-setup.py",
-        "-o",
-        "pytorch-xla-env-setup.py",
-    ]
-    subprocess.run(curl_args)
-
-    install_args = ["python", "pytorch-xla-env-setup.py", "--version", version]
-    subprocess.run(install_args)
-    has_xla = True
+    for p in Path.cwd().glob("*.ckpt"):
+        return str(p)
+    else:
+        return None
 
 
-def is_apex_available() -> bool:
-    return torch.cuda.is_available() and has_apex
-
-
-def is_tpu_available() -> bool:
-    if not has_xla:
-        return False
-
-    import torch_xla.core.xla_model as xm
-
-    devices = xm.get_xla_supported_devices(devkind="TPU")
-    return devices is not None
+def exit() -> None:
+    if is_kaggle() and is_notebook():
+        _ = [0] * 64 * 1000000000
+    else:
+        sys.exit(1)

@@ -1,6 +1,7 @@
 import imageio as io
 import numpy as np
 
+import torch
 from torch.utils.data import Dataset
 
 from .datasource import DataSource
@@ -14,24 +15,12 @@ class MelanomaDataset(Dataset):
         transforms=None,
         meta_features=None,
     ):
-        """
-        Class initialization
-        Args:
-            df (pd.DataFrame): DataFrame with data description
-            imfolder (Path): folder with images
-            train (bool): flag of whether a training dataset is being initialized or testing one
-            transforms: image transformation method to be applied
-            meta_features (list): list of features with meta information, such as sex and age
-            
-        """
         self.source = source
         self.transforms = transforms
         self.train = train
 
         if meta_features is None:
-            self.meta_features = ["sex", "age_approx"] + [
-                col for col in source.df.columns if col.startswith("site_")
-            ]
+            self.meta_features = self.get_default_meta_feature_columns(source)
         else:
             self.meta_features = meta_features
 
@@ -46,10 +35,16 @@ class MelanomaDataset(Dataset):
             x = self.transforms(x)
 
         if self.train:
-            y = self.source.df.iloc[index]["target"]
+            y = torch.tensor(self.source.df.iloc[index]["target"]).view(1)
             return (x, meta), y
         else:
             return (x, meta)
 
     def __len__(self):
         return len(self.source.df)
+
+    @classmethod
+    def get_default_meta_feature_columns(cls, source: DataSource):
+        return ["sex", "age_approx"] + [
+            col for col in source.df.columns if col.startswith("site_")
+        ]
