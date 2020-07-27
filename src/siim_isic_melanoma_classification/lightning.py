@@ -34,12 +34,14 @@ class LightningModelBase(LightningModule):
         config_dict = asdict(config) if isinstance(config, Config) else config
         self.save_hyperparameters(config_dict)
         self.test_results = []
+        self.label_smoothing = kwargs.get("label_smoothing", 0.3)
+        self.pos_weight = kwargs.get("pos_weight", 3.2)
 
     def loss(self, y_hat, y):
-        # y_smo = y.float() * (1 - label_smoothing) + 0.5 * label_smoothing
-        # F.binary_cross_entropy_with_logits(y_hat, y_smo.type_as(y_hat),
-        #                                           pos_weight=torch.tensor(pos_weight))
-        return F.binary_cross_entropy_with_logits(y_hat, y.float())
+        y_smo = y.float() * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
+        return F.binary_cross_entropy_with_logits(
+            y_hat, y_smo.type_as(y_hat), pos_weight=torch.tensor(self.pos_weight)
+        )
 
     def step(self, batch):
         # return batch loss
@@ -56,28 +58,29 @@ class LightningModelBase(LightningModule):
         return {"loss": loss, "acc": acc}
 
     def validation_step(self, batch, batch_idx):
-        loss, _, _ = self.step(batch)
-        #return {"val_loss": loss, "y": y.detach(), "y_hat": y_hat.detach()}
-        return {"val_loss": loss}
+        loss, y, y_hat = self.step(batch)
+        acc = (y_hat.round() == y).float().mean()
+        return {"val_loss": loss, "val_acc": acc}
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x["val_loss"] for x in outputs]).mean()
-        #y = torch.cat([x["y"] for x in outputs])
-        #y_hat = torch.cat([x["y_hat"] for x in outputs])
+        avg_acc = torch.stack([x["val_acc"] for x in outputs]).mean()
+        # y = torch.cat([x["y"] for x in outputs])
+        # y_hat = torch.cat([x["y_hat"] for x in outputs])
 
-        #tmp = torch.cat([y_hat, y.float()], 1)
-        #print(f"before tmp:{tmp.shape}")
-        #tmp = all_gather(tmp)
-        #print(f"after tmp:{tmp.shape}")
+        # tmp = torch.cat([y_hat, y.float()], 1)
+        # print(f"before tmp:{tmp.shape}")
+        # tmp = all_gather(tmp)
+        # print(f"after tmp:{tmp.shape}")
 
-        #auc = (
+        # auc = (
         #    AUROC()(pred=tmp[:, 0], target=tmp[:, 1]) if y.float().mean() > 0 else 0.5
-        #)  # skip sanity check
-        #acc = (tmp[:, 0].round() == tmp[:, 1]).float().mean().item()
-        #self.logger.log_metrics({"val_loss": avg_loss, "val_auc": auc, "val_acc": acc})
-        #return {"val_loss": avg_loss, "val_auc": auc, "val_acc": acc}
-        self.logger.log_metrics({"val_loss": avg_loss})
-        return {"val_loss": avg_loss}
+        # )  # skip sanity check
+        # acc = (tmp[:, 0].round() == tmp[:, 1]).float().mean().item()
+        # self.logger.log_metrics({"val_loss": avg_loss, "val_auc": auc, "val_acc": acc})
+        # return {"val_loss": avg_loss, "val_auc": auc, "val_acc": acc}
+        self.logger.log_metrics({"val_loss": avg_loss, "val_acc": avg_acc})
+        return {"val_loss": avg_loss, "val_acc": avg_acc}
 
     def test_step(self, batch, batch_nb):
         x = batch
@@ -106,6 +109,10 @@ class LightningModelBase(LightningModule):
             self.logger._offset = True
             self.logger._experiment = None
         clean_up()
+
+    def on_train_end(self):
+        if is_tpu_available() and isinstance(self.logger, WandbLogger):
+            self.logger._experiment = None
 
 
 class WorkaroundEarlyStopping(EarlyStopping):
