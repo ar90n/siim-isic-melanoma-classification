@@ -10,11 +10,13 @@ class Config:
     num_workers: int
     max_epochs: int
     image_size: int
-    gpus: int
+    gpus: Optional[int]
     tpus: Optional[int]
     precision: int
     early_stop_patience: int
     max_data_size: Optional[int]
+    label_smoothing: float
+    pos_weight: float
 
 
 def get_config() -> Config:
@@ -23,7 +25,9 @@ def get_config() -> Config:
     num_workers = int(os.environ.get("KAGGLE_NUM_WORKERS", 4))
     max_epochs = int(os.environ.get("KAGGLE_MAX_EPOCHS", 4))
     image_size = int(os.environ.get("KAGGLE_IMAGE_SIZE", 256))
-    gpus = int(os.environ.get("KAGGLE_GPUS", 1))
+    gpus = os.environ.get("KAGGLE_GPUS")
+    if gpus is not None:
+        gpus = int(gpus)
     tpus = os.environ.get("KAGGLE_TPUS")
     if tpus is not None:
         tpus = int(tpus)
@@ -32,6 +36,10 @@ def get_config() -> Config:
     max_data_size = os.environ.get("KAGGLE_MAX_DATASIZE")
     if max_data_size is not None:
         max_data_size = int(max_data_size)
+    label_smoothing = float(os.environ.get("KAGGLE_LABEL_SMOOTHING", 0.0))
+    pos_weight = os.environ.get("KAGGLE_POS_WEIGHT", 1.0)
+    if pos_weight is not None:
+        pos_weight = float(pos_weight)
 
     return Config(
         batch_size,
@@ -44,4 +52,6 @@ def get_config() -> Config:
         precision,
         early_stop_patience,
         max_data_size,
+        label_smoothing,
+        pos_weight
     )

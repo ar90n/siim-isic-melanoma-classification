@@ -1,10 +1,10 @@
 import os
+from typing import Optional
 from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
 
-# from sklearn.metrics import accuracy_score, roc_auc_score
 import torch
 import torch.nn.functional as F
 from torch import optim
@@ -28,19 +28,23 @@ except ImportError:
     pass
 
 
+def label_smoothing(y: torch.tensor, alpha: float) -> torch.tensor:
+    return y.float() * (1 - alpha) + 0.5 * alpha
+
+
 class LightningModelBase(LightningModule):
-    def __init__(self, config, **kwargs):
+    def __init__(self, config: Config, **kwargs):
         super().__init__()
         config_dict = asdict(config) if isinstance(config, Config) else config
         self.save_hyperparameters(config_dict)
         self.test_results = []
-        self.label_smoothing = kwargs.get("label_smoothing", 0.3)
-        self.pos_weight = kwargs.get("pos_weight", 3.2)
 
     def loss(self, y_hat, y):
-        y_smo = y.float() * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
+        y_smo = label_smoothing(y, self.hparams.label_smoothing)
         return F.binary_cross_entropy_with_logits(
-            y_hat, y_smo.type_as(y_hat), pos_weight=torch.tensor(self.pos_weight)
+            y_hat,
+            y_smo.type_as(y_hat),
+            pos_weight=torch.tensor(self.hparams.pos_weight),
         )
 
     def step(self, batch):
@@ -54,7 +58,7 @@ class LightningModelBase(LightningModule):
         # hardware agnostic training
         loss, y, y_hat = self.step(batch)
         acc = (y_hat.round() == y).float().mean().item()
-        self.logger.log_metrics({"loss": loss, "acc": acc})
+        self.logger.log_metrics({"loss": loss, "acc": acc}, None)
         return {"loss": loss, "acc": acc}
 
     def validation_step(self, batch, batch_idx):
@@ -79,7 +83,7 @@ class LightningModelBase(LightningModule):
         # acc = (tmp[:, 0].round() == tmp[:, 1]).float().mean().item()
         # self.logger.log_metrics({"val_loss": avg_loss, "val_auc": auc, "val_acc": acc})
         # return {"val_loss": avg_loss, "val_auc": auc, "val_acc": acc}
-        self.logger.log_metrics({"val_loss": avg_loss, "val_acc": avg_acc})
+        self.logger.log_metrics({"val_loss": avg_loss, "val_acc": avg_acc}, None)
         return {"val_loss": avg_loss, "val_acc": avg_acc}
 
     def test_step(self, batch, batch_nb):
@@ -103,16 +107,17 @@ class LightningModelBase(LightningModule):
         )
         return [optimizer], [scheduler]
 
-    def setup(self, stage):
-        if is_tpu_available() and isinstance(self.logger, WandbLogger):
-            self.logger._name = self.logger.experiment.name
-            self.logger._offset = True
-            self.logger._experiment = None
-        clean_up()
 
-    def on_train_end(self):
-        if is_tpu_available() and isinstance(self.logger, WandbLogger):
-            self.logger._experiment = None
+#    def setup(self, stage):
+#        if is_tpu_available() and isinstance(self.logger, WandbLogger):
+#            self.logger._name = self.logger.experiment.name
+#            self.logger._offset = True
+#            self.logger._experiment = None
+#        clean_up()
+#
+#    def on_train_end(self):
+#        if is_tpu_available() and isinstance(self.logger, WandbLogger):
+#            self.logger._experiment = None
 
 
 class WorkaroundEarlyStopping(EarlyStopping):
@@ -135,18 +140,23 @@ class WorkaroundEarlyStopping(EarlyStopping):
 
 
 class Trainer(Trainer):
-    def __init__(self, config: Config, **kwargs):
+    def __init__(self, config: Config, fold_index: Optional[int] = None, **kwargs):
         if torch.cuda.is_available():
             kwargs["gpus"] = config.gpus
             kwargs["precision"] = config.precision if is_apex_available() else 32
 
         if is_tpu_available():
-            kwargs["tpu_cores"] = config.tpus
+            tpu_id = (fold_index + 1) if fold_index is not None else 1
+            kwargs["tpu_cores"] = [tpu_id] if config.tpus == 1 else config.tpus
             kwargs["precision"] = config.precision
 
         if "checkpoint_callback" not in kwargs:
+            ckpt_filepath_fmt = "{epoch}-{val_loss:.2f}"
+            if fold_index is not None:
+                ckpt_filepath_fmt = f"fold={fold_index}_{ckpt_filepath_fmt}"
+
             kwargs["checkpoint_callback"] = ModelCheckpoint(
-                filepath=str(Path.cwd() / "{epoch}-{val_roc:.2f}"),
+                filepath=str(Path.cwd() / ckpt_filepath_fmt),
                 verbose=True,
                 #                monitor="val_roc",
                 #                mode="max",
@@ -187,5 +197,5 @@ class Classifier:
             )
 
     def _predict_once(self, data_loader):
-        result = [torch.sigmoid(self.model(to_device(x))) for x in data_loader]
+        result = [torch.sigmoid(self.model(to_device(x))).cpu() for x in data_loader]
         return torch.cat(result)

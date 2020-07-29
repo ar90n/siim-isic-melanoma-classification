@@ -1,6 +1,7 @@
 import gc
 import os
 import sys
+import random
 from typing import Optional
 import warnings
 from pathlib import Path
@@ -128,3 +129,39 @@ def exit() -> None:
         _ = [0] * 64 * 1000000000
     else:
         sys.exit(1)
+
+
+def get_random_name(seed: Optional[int] = None) -> str:
+    left_words = [
+        "admiring",
+        "adoring",
+        "affectionate",
+        "agitated",
+        "amazing",
+        "angry",
+        "awesome",
+        "beautiful",
+        "blissful",
+        "bold",
+        "boring",
+        "brave",
+        "busy",
+        "crazy",
+    ]
+
+    right_words = [
+        "rabbit",
+        "lion",
+        "whale",
+        "dog",
+        "cat",
+        "bird",
+        "butterfly",
+        "zebra",
+    ]
+
+    seed = random.randint(0, 1024) if seed is None else seed
+    left_word = left_words[seed % len(left_words)]
+    right_word = right_words[seed % len(right_words)]
+    return f"{left_word}-{right_word}"
+
