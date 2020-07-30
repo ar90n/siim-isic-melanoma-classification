@@ -20,6 +20,7 @@ wandb = "^0.9.3"
 apex = {git = "https://github.com/NVIDIA/apex"}
 cloud-tpu-client = "^0.10"
 comet-ml = "^3.1.14"
+category_encoders = "^2.2.2"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
