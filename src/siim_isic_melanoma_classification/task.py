@@ -15,8 +15,7 @@ from .lightning import Trainer, Classifier
 
 
 def _get_logger_name() -> str:
-    pid = os.getpid()
-    return get_random_name(pid)
+    return get_random_name()
 
 
 def _task(
@@ -85,9 +84,18 @@ def kfold_cv_tta(
     if n_workers is None:
         n_workers = n_split
 
-    _f = _kfold_cv_tta_sp if n_workers == 1 else _kfold_cv_tta_mp
-    all_results = _f(
-        Net, config, all_source, test_source, transforms, n_workers, n_split, stratify
+    logger_base_name = _get_logger_name()
+    _loop = _kfold_cv_tta_sp if n_workers == 1 else _kfold_cv_tta_mp
+    all_results = _loop(
+        Net,
+        config,
+        all_source,
+        test_source,
+        transforms,
+        logger_base_name,
+        n_workers,
+        n_split,
+        stratify,
     )
     return np.average(np.hstack(all_results), axis=1)
 
@@ -98,11 +106,11 @@ def _kfold_cv_tta_mp(
     all_source: DataSource,
     test_source: DataSource,
     transforms,
+    logger_base_name: str,
     n_workers: Optional[int] = 1,
     n_split: int = 5,
     stratify: Optional[str] = "target",
 ) -> np.ndarray:
-    logger_base_name = _get_logger_name()
     with ProcessPoolExecutor(max_workers=n_workers) as executor:
         futures = []
         for fold_index, (train_source, val_source) in enumerate(
@@ -129,11 +137,11 @@ def _kfold_cv_tta_sp(
     all_source: DataSource,
     test_source: DataSource,
     transforms,
+    logger_base_name,
     n_workers: Optional[int] = 1,
     n_split: int = 5,
     stratify: Optional[str] = "target",
 ) -> np.ndarray:
-    logger_base_name = _get_logger_name()
     futures = []
     for fold_index, (train_source, val_source) in enumerate(
         kfold_split(all_source, n_split=n_split, stratify=stratify)
