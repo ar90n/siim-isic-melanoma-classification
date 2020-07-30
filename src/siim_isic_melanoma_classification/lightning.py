@@ -84,7 +84,7 @@ class LightningModelBase(LightningModule):
         y_hat = torch.cat([x["y_hat"] for x in outputs], dim=0)
 
         avg_acc = (y_hat.round() == y).float().mean()
-        #auc = AUROC()(y_hat, y.float()) if y.float().mean() > 0 else torch.tensor(0.5)
+        # auc = AUROC()(y_hat, y.float() if y.float().mean() > 0 else torch.tensor(0.5)
         auc = 0.5
         metrics = {"val_loss": avg_loss, "val_acc": avg_acc, "val_auc": auc}
 
@@ -107,6 +107,7 @@ class LightningModelBase(LightningModule):
             optimizer, T_max=10, eta_min=0.001
         )
         return [optimizer], [scheduler]
+
 
 #    def setup(self, stage):
 #        if is_tpu_available() and isinstance(self.logger, WandbLogger):
@@ -182,15 +183,16 @@ class Classifier:
         clean_up()
 
         with torch.no_grad():
-            return (
-                torch.stack(
-                    [self._predict_once(data_loader) for _ in range(self.tta_epochs)]
-                )
-                .mean(0)
-                .cpu()
-                .numpy()
-            )
+            all_predicts = [
+                self._predict_once(data_loader) for _ in range(self.tta_epochs)
+            ]
+            return torch.stack(all_predicts).mean(0).cpu().numpy()
 
     def _predict_once(self, data_loader):
-        result = [torch.sigmoid(self.model(to_device(x))).cpu() for x in data_loader]
+        device = (
+            self.device if self.device.type.startswith("cuda") else torch.device("cpu")
+        )
+        result = [
+            torch.sigmoid(self.model(to_device(x))).to(device) for x in data_loader
+        ]
         return torch.cat(result)
