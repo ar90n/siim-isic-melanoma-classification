@@ -43,12 +43,6 @@ from siim_isic_melanoma_classification.lightning import (
 )
 
 # %%
-if util.is_tpu_available():
-    from cloud_tpu_client import Client as TpuClient
-
-    TpuClient().configure_tpu_version("pytorch-nightly")
-
-# %%
 config = get_config()
 
 # %%
@@ -122,7 +116,7 @@ test_loader = DataLoader(
 )
 
 # %%
-train_source, val_source = datasource.train_validate_split(all_source, val_size=0.2)
+train_source, val_source = datasource.train_validate_split(all_source, val_size=0.2, stratify=None)
 train_loader = DataLoader(
     MelanomaDataset(train_source, train=True, transforms=train_transform),
     shuffle=True,
@@ -143,7 +137,6 @@ model = Net(config)
 # %%
 trainer = Trainer(config, logger=logger)
 trainer.fit(model, train_loader, val_loader)
-print("train finished")
 
 # %%
 best_model_path = util.search_best_model_path(trainer.best_model_path)
@@ -151,7 +144,7 @@ if best_model_path is not None:
     model = Net.load_from_checkpoint(best_model_path)
 
 # %%
-classifier = Classifier(model)
+classifier = Classifier(model, tta_epochs=1)
 result = classifier.predict(test_loader)
 
 # %%
