@@ -57,34 +57,39 @@ class LightningModelBase(LightningModule):
     def training_step(self, batch, batch_idx):
         # hardware agnostic training
         loss, y, y_hat = self.step(batch)
-        acc = (y_hat.round() == y).float().mean().item()
-        self.logger.log_metrics({"loss": loss, "acc": acc}, None)
+        acc = (y_hat.round() == y).float().mean()
         return {"loss": loss, "acc": acc}
+
+    def training_step_end(self, outputs):
+        avg_loss = outputs["loss"].mean()
+        avg_acc = outputs["acc"].mean()
+
+        metrics = {"loss": avg_loss, "acc": avg_acc}
+        self.logger.log_metrics(metrics, step=self.global_step)
+        return metrics
 
     def validation_step(self, batch, batch_idx):
         loss, y, y_hat = self.step(batch)
-        acc = (y_hat.round() == y).float().mean()
-        return {"val_loss": loss, "val_acc": acc}
+        return {"val_loss": loss, "y_hat": y_hat, "y": y}
+
+    def validation_step_end(self, outputs):
+        loss = outputs["val_loss"].mean()
+        y_hat = outputs["y_hat"]
+        y = outputs["y"]
+        return {"val_loss": loss, "y_hat": y_hat, "y": y}
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x["val_loss"] for x in outputs]).mean()
-        avg_acc = torch.stack([x["val_acc"] for x in outputs]).mean()
-        # y = torch.cat([x["y"] for x in outputs])
-        # y_hat = torch.cat([x["y_hat"] for x in outputs])
+        y = torch.cat([x["y"] for x in outputs], dim=0)
+        y_hat = torch.cat([x["y_hat"] for x in outputs], dim=0)
 
-        # tmp = torch.cat([y_hat, y.float()], 1)
-        # print(f"before tmp:{tmp.shape}")
-        # tmp = all_gather(tmp)
-        # print(f"after tmp:{tmp.shape}")
+        avg_acc = (y_hat.round() == y).float().mean()
+        #auc = AUROC()(y_hat, y.float()) if y.float().mean() > 0 else torch.tensor(0.5)
+        auc = 0.5
+        metrics = {"val_loss": avg_loss, "val_acc": avg_acc, "val_auc": auc}
 
-        # auc = (
-        #    AUROC()(pred=tmp[:, 0], target=tmp[:, 1]) if y.float().mean() > 0 else 0.5
-        # )  # skip sanity check
-        # acc = (tmp[:, 0].round() == tmp[:, 1]).float().mean().item()
-        # self.logger.log_metrics({"val_loss": avg_loss, "val_auc": auc, "val_acc": acc})
-        # return {"val_loss": avg_loss, "val_auc": auc, "val_acc": acc}
-        self.logger.log_metrics({"val_loss": avg_loss, "val_acc": avg_acc}, None)
-        return {"val_loss": avg_loss, "val_acc": avg_acc}
+        self.logger.log_metrics(metrics, step=self.current_epoch)
+        return metrics
 
     def test_step(self, batch, batch_nb):
         x = batch
@@ -97,26 +102,16 @@ class LightningModelBase(LightningModule):
         return {}
 
     def configure_optimizers(self):
-        """
-        Return whatever optimizers and learning rate schedulers you want here.
-        At least one optimizer is required.
-        """
         optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=10, eta_min=0.001
         )
         return [optimizer], [scheduler]
 
-
 #    def setup(self, stage):
 #        if is_tpu_available() and isinstance(self.logger, WandbLogger):
 #            self.logger._name = self.logger.experiment.name
 #            self.logger._offset = True
-#            self.logger._experiment = None
-#        clean_up()
-#
-#    def on_train_end(self):
-#        if is_tpu_available() and isinstance(self.logger, WandbLogger):
 #            self.logger._experiment = None
 
 
