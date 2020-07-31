@@ -116,7 +116,8 @@ test_loader = DataLoader(
 )
 
 # %%
-train_source, val_source = datasource.train_validate_split(all_source, val_size=0.2, stratify=None)
+train_source, val_source = datasource.train_validate_split(all_source, val_size=0.2)
+
 train_loader = DataLoader(
     MelanomaDataset(train_source, train=True, transforms=train_transform),
     shuffle=True,
@@ -144,8 +145,7 @@ if best_model_path is not None:
     model = Net.load_from_checkpoint(best_model_path)
 
 # %%
-classifier = Classifier(model, tta_epochs=1)
-result = classifier.predict(test_loader)
+result = Classifier(model).predict(test_loader)
 
 # %%
 io.save_result(result)
