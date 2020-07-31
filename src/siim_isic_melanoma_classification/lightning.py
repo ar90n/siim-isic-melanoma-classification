@@ -80,12 +80,12 @@ class LightningModelBase(LightningModule):
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x["val_loss"] for x in outputs]).mean()
-        y = torch.cat([x["y"] for x in outputs], dim=0)
-        y_hat = torch.cat([x["y_hat"] for x in outputs], dim=0)
+        y = torch.cat([x["y"] for x in outputs], dim=0).flatten()
+        y_hat = torch.cat([x["y_hat"] for x in outputs], dim=0).flatten()
 
         avg_acc = (y_hat.round() == y).float().mean()
-        # auc = AUROC()(y_hat, y.float() if y.float().mean() > 0 else torch.tensor(0.5)
-        auc = 0.5
+
+        auc = AUROC()(y_hat, y.float()) if y.float().mean() > 0 else torch.tensor(0.5)
         metrics = {"val_loss": avg_loss, "val_acc": avg_acc, "val_auc": auc}
 
         self.logger.log_metrics(metrics, step=self.current_epoch)
@@ -103,8 +103,8 @@ class LightningModelBase(LightningModule):
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=10, eta_min=0.001
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer=optimizer, mode="max", patience=1, verbose=True, factor=0.2
         )
         return [optimizer], [scheduler]
 
@@ -147,22 +147,22 @@ class Trainer(Trainer):
             kwargs["precision"] = config.precision
 
         if "checkpoint_callback" not in kwargs:
-            ckpt_filepath_fmt = "{epoch}-{val_loss:.2f}"
+            ckpt_filepath_fmt = "{epoch}-{val_auc:.2f}"
             if fold_index is not None:
                 ckpt_filepath_fmt = f"fold={fold_index}_{ckpt_filepath_fmt}"
 
             kwargs["checkpoint_callback"] = ModelCheckpoint(
                 filepath=str(Path.cwd() / ckpt_filepath_fmt),
                 verbose=True,
-                #                monitor="val_roc",
-                #                mode="max",
+                monitor="val_auc",
+                mode="max",
             )
         if "early_stop_callback" not in kwargs:
             kwargs["early_stop_callback"] = WorkaroundEarlyStopping(
                 patience=config.early_stop_patience,
                 verbose=True,
-                #                monitor="val_roc",
-                #                mode="max",
+                monitor="val_auc",
+                mode="max",
             )
 
         super().__init__(max_epochs=config.max_epochs, **kwargs)
