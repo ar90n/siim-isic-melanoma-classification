@@ -41,7 +41,7 @@ config = get_config()
 
 # %%
 util.initialize(config)
-if "KAGGLE_CONTAINER_NAME" in os.environ:
+if util.is_kaggle():
     import kaggle_timm_pretrained
 
     kaggle_timm_pretrained.patch()
@@ -94,8 +94,8 @@ test_transform = transforms.Compose(
 
 
 # %%
-all_source, test_source = io.load_jpeg_melanoma(
-    size=config.image_size, max_data_size=config.max_data_size
+all_source, test_source = io.load_my_isic2020_csv(
+    size=config.image_size, is_sanity_check=config.is_sanity_check
 )
 
 # %%

@@ -17,6 +17,7 @@ class Config:
     max_data_size: Optional[int]
     label_smoothing: float
     pos_weight: float
+    sanity_check: bool
 
 
 def get_config() -> Config:
@@ -40,6 +41,7 @@ def get_config() -> Config:
     pos_weight = os.environ.get("KAGGLE_POS_WEIGHT", 1.0)
     if pos_weight is not None:
         pos_weight = float(pos_weight)
+    sanity_check = bool(int(os.environ.get("KAGGLE_SANITY_CHECK", 0)))
 
     return Config(
         batch_size,
@@ -53,5 +55,6 @@ def get_config() -> Config:
         early_stop_patience,
         max_data_size,
         label_smoothing,
-        pos_weight
+        pos_weight,
+        sanity_check,
     )
