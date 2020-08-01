@@ -31,7 +31,7 @@ jupyter = "^1.0.0"
 jupytext = "^1.5.1"
 
 [tool.kkt]
-enable_git_tag = false
+enable_git_tag = true
 enable_constraint = false
 secret_keys = ["WANDB_API_KEY"]
 
@@ -48,6 +48,9 @@ slug = "siim-isic-melanoma-classification"
 
   [tool.kkt.meta_data.efficientnet_b0_mlp]
   code_file = "runner/efficientnet_b0_mlp.ipynb"
+
+  [tool.kkt.meta_data.train_en_b0_mlp]
+  code_file = "runner/train_efficientnet_b0_ml.pynb"
 
 [build-system]
 requires = ["poetry>=0.12"]
