@@ -156,3 +156,5 @@ wandb
 # checkpoint
 *.csv
 
+.env.sh
+tpu
