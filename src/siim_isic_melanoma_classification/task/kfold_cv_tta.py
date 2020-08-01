@@ -6,16 +6,13 @@ from concurrent.futures import ProcessPoolExecutor
 from torch.utils.data import DataLoader
 import numpy as np
 
-from .logger import get_logger
-from .config import Config
-from .util import clean_up, is_tpu_available, search_best_model_path, get_random_name
-from .datasource import kfold_split, DataSource
-from .dataset import MelanomaDataset
-from .lightning import Trainer, Classifier
-
-
-def _get_logger_name() -> str:
-    return get_random_name()
+from ..logger import get_logger
+from ..config import Config
+from ..util import clean_up, is_tpu_available, search_best_model_path
+from ..datasource import kfold_split, DataSource
+from ..dataset import MelanomaDataset
+from ..lightning import Trainer, Classifier
+from .common import get_logger_name
 
 
 def _task(
@@ -26,6 +23,7 @@ def _task(
     test_source: DataSource,
     transforms,
     fold_index: int,
+    n_fold: int,
     logger_base_name: str,
 ):
     # TODO: if model isn't initialized hbefore logger initializzation, an exception occur.
@@ -57,7 +55,7 @@ def _task(
         drop_last=is_tpu_available(),
     )
 
-    trainer = Trainer(config, fold_index=fold_index, logger=logger)
+    trainer = Trainer(config, fold_index=fold_index, n_fold=n_fold, logger=logger)
     trainer.fit(model, train_loader, val_loader)
 
     clean_up()
@@ -75,16 +73,15 @@ def kfold_cv_tta(
     test_source: DataSource,
     transforms,
     n_workers: Optional[int] = 1,
-    n_split: int = 5,
-    stratify: Optional[str] = "target",
+    n_fold: int = 8,
 ) -> np.ndarray:
 
-    if n_split < 0 or 8 < n_split:
-        raise ValueError("n_split must be best_model_path 1 with 8")
+    if n_fold < 0 or 8 < n_fold:
+        raise ValueError("n_fold must be best_model_path 1 with 8")
     if n_workers is None:
-        n_workers = n_split
+        n_workers = n_fold
 
-    logger_base_name = _get_logger_name()
+    logger_base_name = get_logger_name(config)
     _loop = _kfold_cv_tta_sp if n_workers == 1 else _kfold_cv_tta_mp
     all_results = _loop(
         Net,
@@ -94,8 +91,7 @@ def kfold_cv_tta(
         transforms,
         logger_base_name,
         n_workers,
-        n_split,
-        stratify,
+        n_fold,
     )
     return np.average(np.hstack(all_results), axis=1)
 
@@ -107,14 +103,13 @@ def _kfold_cv_tta_mp(
     test_source: DataSource,
     transforms,
     logger_base_name: str,
-    n_workers: Optional[int] = 1,
-    n_split: int = 5,
-    stratify: Optional[str] = "target",
+    n_workers: int,
+    n_fold: int,
 ) -> np.ndarray:
     with ProcessPoolExecutor(max_workers=n_workers) as executor:
         futures = []
         for fold_index, (train_source, val_source) in enumerate(
-            kfold_split(all_source, n_split=n_split, stratify=stratify)
+            kfold_split(all_source, n_fold=n_fold)
         ):
             future = executor.submit(
                 _task,
@@ -138,13 +133,12 @@ def _kfold_cv_tta_sp(
     test_source: DataSource,
     transforms,
     logger_base_name,
-    n_workers: Optional[int] = 1,
-    n_split: int = 5,
-    stratify: Optional[str] = "target",
+    n_workers: int,
+    n_fold: int,
 ) -> np.ndarray:
     futures = []
     for fold_index, (train_source, val_source) in enumerate(
-        kfold_split(all_source, n_split=n_split, stratify=stratify)
+        kfold_split(all_source, n_fold=n_fold)
     ):
         future = _task(
             Net,
@@ -154,6 +148,7 @@ def _kfold_cv_tta_sp(
             test_source,
             transforms,
             fold_index,
+            n_fold,
             logger_base_name,
         )
         futures.append(future)

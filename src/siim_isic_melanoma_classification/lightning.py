@@ -91,16 +91,6 @@ class LightningModelBase(LightningModule):
         self.logger.log_metrics(metrics, step=self.current_epoch)
         return metrics
 
-    def test_step(self, batch, batch_nb):
-        x = batch
-        y_hat = self(x).sigmoid()
-        return {"y_hat": y_hat}
-
-    def test_epoch_end(self, outputs):
-        y_hat = torch.stack([x["y_hat"] for x in outputs]).flatten()
-        self.test_results.append(y_hat.detach())
-        return {}
-
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -136,7 +126,13 @@ class WorkaroundEarlyStopping(EarlyStopping):
 
 
 class Trainer(Trainer):
-    def __init__(self, config: Config, fold_index: Optional[int] = None, **kwargs):
+    def __init__(
+        self,
+        config: Config,
+        fold_index: Optional[int] = None,
+        n_fold: Optional[int] = None,
+        **kwargs,
+    ):
         if torch.cuda.is_available():
             kwargs["gpus"] = config.gpus
             kwargs["precision"] = config.precision if is_apex_available() else 32
@@ -147,9 +143,15 @@ class Trainer(Trainer):
             kwargs["precision"] = config.precision
 
         if "checkpoint_callback" not in kwargs:
-            ckpt_filepath_fmt = "{epoch}-{val_auc:.2f}"
+            fold_fmt = None
             if fold_index is not None:
-                ckpt_filepath_fmt = f"fold={fold_index}_{ckpt_filepath_fmt}"
+                fold_fmt = f"fold={fold_index}"
+                if n_fold is not None:
+                    fold_fmt = f"{fold_fmt}@{n_fold - 1}"
+
+            ckpt_filepath_fmt = "{epoch}-{val_auc:.2f}"
+            if fold_fmt is not None:
+                ckpt_filepath_fmt = f"{fold_fmt}_{ckpt_filepath_fmt}"
 
             kwargs["checkpoint_callback"] = ModelCheckpoint(
                 filepath=str(Path.cwd() / ckpt_filepath_fmt),

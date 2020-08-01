@@ -18,6 +18,7 @@ class Config:
     label_smoothing: float
     pos_weight: float
     sanity_check: bool
+    logger_name: Optional[str]
 
 
 def get_config() -> Config:
@@ -42,6 +43,7 @@ def get_config() -> Config:
     if pos_weight is not None:
         pos_weight = float(pos_weight)
     sanity_check = bool(int(os.environ.get("KAGGLE_SANITY_CHECK", 0)))
+    logger_name = os.environ.get("KAGGLE_LOGGER_NAME")
 
     return Config(
         batch_size,
@@ -57,4 +59,5 @@ def get_config() -> Config:
         label_smoothing,
         pos_weight,
         sanity_check,
+        logger_name,
     )

@@ -95,7 +95,7 @@ test_transform = transforms.Compose(
 
 # %%
 all_source, test_source = io.load_my_isic2020_csv(
-    size=config.image_size, is_sanity_check=config.is_sanity_check
+    size=config.image_size, is_sanity_check=config.sanity_check
 )
 
 # %%
