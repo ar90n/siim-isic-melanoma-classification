@@ -107,7 +107,7 @@ replace_tbl = {
         "lateral torso": "torso",
         "anterior torso": "torso",
     },
-    "sex": {"male": 1, "female": -1, "unknown": 0, "nan": 0},
+    "sex": {"male": 1, "female": 0, "unknown": 0.5},
 }
 all_df = all_df.replace(replace_tbl)
 
@@ -121,8 +121,9 @@ one_hot_anatomies = pd.get_dummies(
 all_df = pd.concat([all_df, one_hot_anatomies], axis=1)
 
 # Normalize age_approx and patient_id
-all_df["age_approx"] /= 100.0
+all_df["age_approx"] /= all_df["age_approx"].max()
 all_df["age_approx"] = all_df["age_approx"].fillna(0)
+all_df["sex"] = all_df["sex"].fillna(0.5)
 
 # Split train and tes
 train_rows = train_2020_df.shape[0] + train_2019_df.shape[0]
