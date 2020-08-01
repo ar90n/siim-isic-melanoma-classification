@@ -20,13 +20,14 @@ class MelanomaDataset(Dataset):
         self.train = train
 
         if meta_features is None:
-            self.meta_features = self.get_default_meta_feature_columns(source)
+            self.meta_features = self.get_one_hot_encoding_columns(source)
         else:
             self.meta_features = meta_features
 
     def __getitem__(self, index):
-        im_path = self.source.root / f"{self.source.df.iloc[index]['image_name']}.jpg"
-        x = io.imread(im_path)
+        img_root = self.source.roots[self.source.df.iloc[index]["dataset"]]
+        img_path = img_root / f"{self.source.df.iloc[index]['image_name']}.jpg"
+        x = io.imread(img_path)
         meta = np.array(
             self.source.df.iloc[index][self.meta_features].values, dtype=np.float32
         )
@@ -44,7 +45,7 @@ class MelanomaDataset(Dataset):
         return len(self.source.df)
 
     @classmethod
-    def get_default_meta_feature_columns(cls, source: DataSource):
+    def get_one_hot_encoding_columns(cls, source: DataSource):
         return ["sex", "age_approx"] + [
             col for col in source.df.columns if col.startswith("site_")
         ]

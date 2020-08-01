@@ -86,12 +86,21 @@ def get_input() -> Path:
     return Path.cwd().parent / "input"
 
 
+def get_my_isic2020_csv_root() -> Path:
+    return get_input() / "my-isic2020-csv"
+
+
 def get_isic_melanoma_classification_root() -> Path:
     return get_input() / "siim-isic-melanoma-classification"
 
 
 def get_jpeg_melanoma_root(size: int) -> Path:
     dataset_name = f"jpeg-melanoma-{size}x{size}"
+    return get_input() / dataset_name
+
+
+def get_jpeg_isic2019_root(size: int) -> Path:
+    dataset_name = f"jpeg-isic2019-{size}x{size}"
     return get_input() / dataset_name
 
 

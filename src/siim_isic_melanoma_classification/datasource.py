@@ -1,8 +1,8 @@
-from typing import Tuple, Optional, Union
+from typing import Tuple, Dict, cast, List
 from dataclasses import dataclass
 from pathlib import Path
 
-from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
+from sklearn.model_selection import KFold
 
 import pandas as pd
 
@@ -10,35 +10,31 @@ import pandas as pd
 @dataclass
 class DataSource:
     df: pd.DataFrame
-    root: Path
+    roots: Dict[str, Path]
+    folds: List[int]
 
     def __len__(self) -> int:
         return len(self.df)
 
 
 def train_validate_split(
-    source: DataSource, val_size: float, stratify: Optional[str] = "target"
-) -> Tuple[DataSource, DataSource]:
-    if stratify is not None:
-        stratify = source.df[stratify]
-    train_df, val_df = train_test_split(
-        source.df, test_size=val_size, stratify=stratify, shuffle=True
+    source: DataSource, val_folds: List[int] = [0, 1]) -> Tuple[DataSource, DataSource]:
+    train_folds = list(set(range(8)) - set(val_folds))
+    train_df = cast(pd.DataFrame, source.df[source.df["fold"].isin(train_folds)])
+    val_df = cast(pd.DataFrame, source.df[source.df["fold"].isin(val_folds)])
+    return (
+        DataSource(train_df, source.roots, train_folds),
+        DataSource(val_df, source.roots, val_folds),
     )
-    return DataSource(train_df, source.root), DataSource(val_df, source.root)
 
 
-def _kfold_split(
-    source: DataSource, n_split: int, stratify: Optional[str]
-) -> Union[KFold, StratifiedKFold]:
-    if stratify is not None:
-        return StratifiedKFold(n_split, shuffle=True).split(
-            source.df, source.df[stratify]
-        )
-    return KFold(n_split, shuffle=True).split(source.df)
+def kfold_split(source: DataSource, n_fold=4):
+    if n_fold not in [4, 8]:
+        raise ValueError("n_fold must be 4 or 8")
 
-
-def kfold_split(source: DataSource, n_split=5, stratify: Optional[str] = "target"):
-    for train_idx, val_idx in _kfold_split(source, n_split, stratify):
-        train_source = DataSource(source.df.iloc[train_idx], source.root)
-        val_source = DataSource(source.df.iloc[val_idx], source.root)
+    for train_folds, val_folds in KFold(n_fold).split(range(8)):
+        train_df = cast(pd.DataFrame, source.df[source.df["fold"].isin(train_folds)])
+        val_df = cast(pd.DataFrame, source.df[source.df["fold"].isin(val_folds)])
+        train_source = DataSource(train_df, source.roots, train_folds)
+        val_source = DataSource(val_df, source.roots, val_folds)
         yield train_source, val_source

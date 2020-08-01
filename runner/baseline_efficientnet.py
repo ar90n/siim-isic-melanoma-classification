@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: hydrogen
 #       format_version: '1.3'
-#       jupytext_version: 1.5.1
+#       jupytext_version: 1.5.2
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -23,6 +23,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torchtoolbox.transform as transforms
+from torchtoolbox.nn import Swish
 import timm
 import os
 
@@ -43,6 +44,9 @@ from siim_isic_melanoma_classification.lightning import (
 )
 
 # %%
+from category_encoders import TargetEncoder
+
+# %%
 config = get_config()
 
 # %%
@@ -51,38 +55,10 @@ logger.log_hyperparams(config.__dict__)
 
 # %%
 util.initialize(config)
-if "KAGGLE_CONTAINER_NAME" in os.environ:
+if util.is_kaggle():
     import kaggle_timm_pretrained
 
     kaggle_timm_pretrained.patch()
-
-# %%
-class Net(LightningModelBase):
-    def __init__(self, config, **kwargs):
-        super().__init__(config, **kwargs)
-        self.backbone = timm.create_model(
-            "efficientnet_b0", num_classes=500, pretrained=True
-        )
-        self.meta = nn.Sequential(
-            nn.Linear(9, 500),
-            nn.BatchNorm1d(500),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(500, 250),  # FC layer output will have 250 features
-            nn.BatchNorm1d(250),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-        )
-        self.ouput = nn.Linear(500 + 250, 1)
-
-    def forward(self, inputs):
-        x, y = inputs
-        x = self.backbone(x)
-        y = self.meta(y)
-        features = torch.cat((x, y), dim=1)
-        output = self.ouput(features)
-        return output.view(output.size(0), -1)
-
 
 # %%
 train_transform = transforms.Compose(
@@ -104,10 +80,9 @@ test_transform = transforms.Compose(
 
 
 # %%
-all_source, test_source = io.load_jpeg_melanoma(
-    size=config.image_size, max_data_size=config.max_data_size
+all_source, test_source = io.load_my_isic2020_csv(
+    size=config.image_size, is_sanity_check=(not util.is_kaggle())
 )
-
 # %%
 test_loader = DataLoader(
     MelanomaDataset(test_source, train=False, transforms=test_transform),
@@ -116,7 +91,7 @@ test_loader = DataLoader(
 )
 
 # %%
-train_source, val_source = datasource.train_validate_split(all_source, val_size=0.2)
+train_source, val_source = datasource.train_validate_split(all_source)
 
 train_loader = DataLoader(
     MelanomaDataset(train_source, train=True, transforms=train_transform),
@@ -133,6 +108,34 @@ val_loader = DataLoader(
     drop_last=util.is_tpu_available(),
 )
 # %%
+class Net(LightningModelBase):
+    def __init__(self, config, **kwargs):
+        super().__init__(config, **kwargs)
+        self.backbone = timm.create_model(
+            "efficientnet_b0", num_classes=500, pretrained=True
+        )
+        self.meta = nn.Sequential(
+            nn.Linear(9, 500),
+            nn.BatchNorm1d(500),
+            Swish(),
+            nn.Dropout(p=0.2),
+            nn.Linear(500, 250),  # FC layer output will have 250 features
+            nn.BatchNorm1d(250),
+            Swish(),
+            nn.Dropout(p=0.2),
+        )
+        self.ouput = nn.Linear(500 + 250, 1)
+
+    def forward(self, inputs):
+        x, y = inputs
+        x = self.backbone(x)
+        y = self.meta(y)
+        features = torch.cat((x, y), dim=1)
+        output = self.ouput(features)
+        return output.view(output.size(0), -1)
+
+
+# %%
 model = Net(config)
 
 # %%
@@ -145,7 +148,7 @@ if best_model_path is not None:
     model = Net.load_from_checkpoint(best_model_path)
 
 # %%
-result = Classifier(model).predict(test_loader)
+result = Classifier(model, tta_epochs=5).predict(test_loader)
 
 # %%
 io.save_result(result)
