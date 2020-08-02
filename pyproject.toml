@@ -21,6 +21,7 @@ wandb = "^0.9.3"
 cloud-tpu-client = "^0.10"
 comet-ml = "^3.1.14"
 category_encoders = "^2.2.2"
+jpeg2dct = "^0.2.4"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
@@ -39,7 +40,7 @@ secret_keys = ["WANDB_API_KEY"]
 code_file = "runner/baseline_efficientnet.ipynb"
 competition = "siim-isic-melanoma-classification"
 competition_sources = ["siim-isic-melanoma-classification"]
-dataset_sources = ["cdeotte/jpeg-melanoma-128x128", "cdeotte/jpeg-melanoma-256x256", "cdeotte/jpeg-melanoma-384x384", "cdeotte/jpeg-isic2019-128x128", "cdeotte/jpeg-isic2019-256x256", "cdeotte/jpeg-isic2019-384x384", "nroman/melanoma-hairs", "ar90ngas/timm-pretrained-efficientnet", "ar90ngas/timm-pretrained-vovnet", "ar90ngas/my-isic2020-csv"]
+dataset_sources = ["cdeotte/jpeg-melanoma-128x128", "cdeotte/jpeg-melanoma-256x256", "cdeotte/jpeg-melanoma-384x384", "cdeotte/jpeg-isic2019-128x128", "cdeotte/jpeg-isic2019-256x256", "cdeotte/jpeg-isic2019-384x384", "nroman/melanoma-hairs", "ar90ngas/timm-pretrained-efficientnet", "ar90ngas/my-isic2020-csv", "ar90ngas/my-isic2020-experiments"]
 enable_gpu = true
 enable_internet = true
 is_private = true
@@ -51,6 +52,10 @@ slug = "siim-isic-melanoma-classification"
 
   [tool.kkt.meta_data.train_en_b0_mlp]
   code_file = "runner/train_efficientnet_b0_mlp.ipynb"
+
+  [tool.kkt.meta_data.infer_test_tta]
+  code_file = "runner/infer_test_tta.ipynb"
+  enable_gpu = false
 
 [build-system]
 requires = ["poetry>=0.12"]

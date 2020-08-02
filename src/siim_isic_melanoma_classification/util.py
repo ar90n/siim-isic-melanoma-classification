@@ -90,8 +90,8 @@ def get_my_isic2020_csv_root() -> Path:
     return get_input() / "my-isic2020-csv"
 
 
-def get_my_isic2020_models_root() -> Path:
-    return get_input() / "my-isic2020-models"
+def get_my_isic2020_experiments_root() -> Path:
+    return get_input() / "my-isic2020-experiments"
 
 
 def get_isic_melanoma_classification_root() -> Path:
