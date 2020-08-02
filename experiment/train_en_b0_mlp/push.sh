@@ -18,5 +18,5 @@ export KKT_WANDB_PROJECT=isic2020_train_en_b0_mlp
 #export KKT_KAGGLE_SANITY_CHECK=1
 
 PROJ_ROOT=$(python -c "from pathlib import Path; print(str(Path('$0').absolute().parent.parent.parent))")
-poetry run jupytext --to notebook  ${PROJ_ROOT}/runner/train_efficientnet_b0_ml.py
+poetry run jupytext --to notebook  ${PROJ_ROOT}/runner/train_efficientnet_b0_mlp.py
 poetry run kkt push --target .train_en_b0_mlp
