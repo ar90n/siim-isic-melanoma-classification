@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, cast, List
+from typing import Tuple, Dict, cast, List, Union
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -10,7 +10,7 @@ import pandas as pd
 @dataclass
 class DataSource:
     df: pd.DataFrame
-    roots: Dict[str, Path]
+    roots: Union[Path, Dict[str, Path]]
     folds: List[int]
 
     def __len__(self) -> int:

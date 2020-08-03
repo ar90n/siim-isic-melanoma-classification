@@ -108,6 +108,11 @@ def get_jpeg_isic2019_root(size: int) -> Path:
     return get_input() / dataset_name
 
 
+def get_malignant_v2_root(size: int) -> Path:
+    dataset_name = f"malignant-v2-{size}x{size}"
+    return get_input() / dataset_name
+
+
 def clean_up():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
