@@ -15,7 +15,7 @@ export KKT_KAGGLE_N_FOLD=4
 export KKT_KAGGLE_TRAIN_FOLD_INDEX=${FOLD_INDEX}
 export KKT_WANDB_PROJECT=isic2020_train_en_b3_mlp
 
-export KKT_KAGGLE_SANITY_CHECK=1
+#export KKT_KAGGLE_SANITY_CHECK=1
 
 PROJ_ROOT=$(python -c "from pathlib import Path; print(str(Path('$0').absolute().parent.parent.parent))")
 poetry run jupytext --to notebook  ${PROJ_ROOT}/runner/train_efficientnet_b3_mlp.py
