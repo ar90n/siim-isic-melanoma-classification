@@ -93,8 +93,8 @@ class LightningModelBase(LightningModule):
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
-        scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer=optimizer, mode="max", patience=1, verbose=True, factor=0.2
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=10, eta_min=0.001
         )
         return [optimizer], [scheduler]
 

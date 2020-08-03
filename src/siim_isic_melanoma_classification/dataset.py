@@ -1,6 +1,7 @@
+from pathlib import Path
+
 import imageio as io
 import numpy as np
-
 import torch
 from torch.utils.data import Dataset
 
@@ -25,7 +26,7 @@ class MelanomaDataset(Dataset):
             self.meta_features = meta_features
 
     def __getitem__(self, index):
-        img_root = self.source.roots[self.source.df.iloc[index]["dataset"]]
+        img_root = self.get_img_root(index)
         img_path = img_root / f"{self.source.df.iloc[index]['image_name']}.jpg"
         x = io.imread(img_path)
         meta = np.array(
@@ -43,6 +44,12 @@ class MelanomaDataset(Dataset):
 
     def __len__(self):
         return len(self.source.df)
+
+    def get_img_root(self, index: int):
+        if isinstance(self.source.roots, Path):
+            return self.source.roots
+        else:
+            return self.source.roots[self.source.df.iloc[index]["dataset"]]
 
     @classmethod
     def get_one_hot_encoding_columns(cls, source: DataSource):
