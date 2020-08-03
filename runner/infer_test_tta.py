@@ -65,4 +65,5 @@ test_loader = DataLoader(
 )
 
 # %%
-task.infer_tta(config, test_source, train_transform)
+experiment_name = os.environ["KAGGLE_EXPERIMENT_NAME"]
+task.infer_tta(config, test_source, train_transform, experiment_name)

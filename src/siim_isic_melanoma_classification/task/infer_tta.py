@@ -15,9 +15,9 @@ from ..net import load_from_checkpoint
 
 
 def infer_tta(
-    config: Config, test_source: DataSource, transforms,
+    config: Config, test_source: DataSource, transforms, experiment_name
 ):
-    experiment_root = get_my_isic2020_experiments_root() / config.experiment_name
+    experiment_root = get_my_isic2020_experiments_root() / experiment_name
     experiment_index_path = experiment_root / "index.json"
     experiment = json.load(experiment_index_path.open("r"))
 

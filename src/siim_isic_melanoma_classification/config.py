@@ -19,7 +19,6 @@ class Config:
     pos_weight: float
     sanity_check: bool
     logger_name: Optional[str]
-    experiment_name: str
     tta_epochs: int
 
 
@@ -46,7 +45,6 @@ def get_config() -> Config:
         pos_weight = float(pos_weight)
     sanity_check = bool(int(os.environ.get("KAGGLE_SANITY_CHECK", 0)))
     logger_name = os.environ.get("KAGGLE_LOGGER_NAME")
-    experiment_name = os.environ["KAGGLE_EXPERIMENT_NAME"]
     tta_epochs = int(os.environ.get("KAGGLE_TTA_EPOCHS", 5))
 
     return Config(
@@ -64,6 +62,5 @@ def get_config() -> Config:
         pos_weight,
         sanity_check,
         logger_name,
-        experiment_name,
         tta_epochs
     )

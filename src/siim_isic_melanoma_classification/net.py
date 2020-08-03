@@ -10,7 +10,7 @@ from .lightning import LightningModelBase
 
 def load_from_checkpoint(model_name, path_to_cktp: Path) -> LightningModelBase:
     return {
-        EfficientNetB0MLP.name: EfficientNetB0MLP
+        EfficientNetB0MLP.name: EfficientNetB0MLP,
         EfficientNetB3MLP.name: EfficientNetB3MLP
     }[model_name].load_from_checkpoint(
         str(path_to_cktp)
