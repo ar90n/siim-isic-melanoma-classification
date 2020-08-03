@@ -22,6 +22,7 @@ cloud-tpu-client = "^0.10"
 comet-ml = "^3.1.14"
 category_encoders = "^2.2.2"
 jpeg2dct = "^0.2.4"
+xgboost = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
