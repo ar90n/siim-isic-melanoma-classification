@@ -53,6 +53,9 @@ slug = "siim-isic-melanoma-classification"
   [tool.kkt.meta_data.train_en_b0_mlp]
   code_file = "runner/train_efficientnet_b0_mlp.ipynb"
 
+  [tool.kkt.meta_data.train_en_b3_mlp]
+  code_file = "runner/train_efficientnet_b3_mlp.ipynb"
+
   [tool.kkt.meta_data.infer_test_tta]
   code_file = "runner/infer_test_tta.ipynb"
 
