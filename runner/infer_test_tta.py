@@ -41,6 +41,13 @@ from siim_isic_melanoma_classification.dataset import MelanomaDataset
 config = get_config()
 
 # %%
+util.initialize(config)
+if util.is_kaggle():
+    import kaggle_timm_pretrained
+
+    kaggle_timm_pretrained.patch()
+
+# %%
 train_transform = transforms.Compose(
     [
         transforms.RandomResizedCrop(size=config.image_size, scale=(0.8, 1.0)),
