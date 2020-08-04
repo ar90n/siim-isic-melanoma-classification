@@ -9,7 +9,7 @@ import yaml
 def main(model_name: str, root_path: Path):
     checkpoints = []
     for model_path in root_path.glob("*.ckpt"):
-        match = re.match(r"^fold=(\d+)@(\d+).*", model_path.stem)
+        match = re.match(r"^fold_(\d+)_(\d+).*", model_path.stem)
         if match is None:
             continue
 
