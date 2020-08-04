@@ -32,7 +32,7 @@ jupyter = "^1.0.0"
 jupytext = "^1.5.1"
 
 [tool.kkt]
-enable_git_tag = true
+enable_git_tag = false
 enable_constraint = false
 secret_keys = ["WANDB_API_KEY"]
 
@@ -55,6 +55,9 @@ slug = "siim-isic-melanoma-classification"
 
   [tool.kkt.meta_data.train_en_b3_mlp]
   code_file = "runner/train_efficientnet_b3_mlp.ipynb"
+
+  [tool.kkt.meta_data.train_en_b6_mlp]
+  code_file = "runner/train_efficientnet_b6_mlp.ipynb"
 
   [tool.kkt.meta_data.infer_test_tta]
   code_file = "runner/infer_test_tta.ipynb"
