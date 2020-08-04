@@ -72,6 +72,10 @@ slug = "siim-isic-melanoma-classification"
     [tool.kkt.meta_data.runner.infer_test_tta]
     code_file = "runner/infer_test_tta.ipynb"
 
+    [tool.kkt.meta_data.runner.train_xgboost_meta]
+    code_file = "runner/train_xgboost_meta.ipynb"
+    enable_gpu = false
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

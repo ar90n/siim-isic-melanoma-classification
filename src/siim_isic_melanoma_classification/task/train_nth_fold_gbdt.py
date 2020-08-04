@@ -19,16 +19,22 @@ from .common import get_logger_name
 
 
 def train_nth_fold_gbdt(
-    config: Config, all_source: DataSource, transforms,
+    config: Config,
+    all_source: DataSource,
+    transforms,
+    experiment_name,
+    fold_index,
+    n_fold,
+    feature_layer,
 ):
-    experiment_root = get_my_isic2020_experiments_root() / config.experiment_name
+    experiment_root = get_my_isic2020_experiments_root() / experiment_name
     experiment_index_path = experiment_root / "index.json"
     experiment = json.load(experiment_index_path.open("r"))
 
     model_type = experiment["model_type"]
     for ckpt in experiment["checkpoints"]:
-        fold_index = ckpt["fold_index"]
-        n_fold = ckpt["n_fold"] + 1
+        if (fold_index != ckpt["fold_index"]) or (n_fold != (ckpt["n_fold"] + 1)):
+            continue
         ckpt_path = experiment_root / ckpt["file"]
 
         logger_base_name = get_logger_name(config)
@@ -57,7 +63,7 @@ def train_nth_fold_gbdt(
             f"Train using {str(ckpt_path)} - {fold_index} / {n_fold}", file=sys.stderr,
         )
         model = create_ef_lowlevel_features_model(
-            load_from_checkpoint(model_type, ckpt_path), 5
+            load_from_checkpoint(model_type, ckpt_path), feature_layer
         )
         x_train = Classifier(model).predict(train_loader)
         y_train = np.vstack([y for y in train_source.df["target"]]).ravel()
@@ -68,13 +74,19 @@ def train_nth_fold_gbdt(
         xgb_val = xgb.DMatrix(x_val, label=y_val)
         xgb_params = {"objective": "binary:logistic", "eval_metric": "logloss"}
         xgb_model = xgb.train(
-            xgb_params, xgb_train, num_boost_round=100, callbacks=[wandb_callback()]
+            params=xgb_params,
+            dtrain=xgb_train,
+            num_boost_round=5000,
+            evals=[(xgb_train, "train"), (xgb_val, "test")],
+            callbacks=[wandb_callback()],
+            early_stopping_rounds=32,
         )
+
         y_val_pred = xgb_model.predict(xgb_val)
 
         auc = roc_auc_score(y_val, y_val_pred)
         print(
-            f"Use {config.experiment_name} - {fold_index} / {n_fold}: auc={auc}",
+            f"Use {experiment_name} - {fold_index} / {n_fold}: auc={auc}",
             file=sys.stderr,
         )
 

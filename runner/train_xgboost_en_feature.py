@@ -18,14 +18,12 @@
 #%autoreload 2
 
 # %%
-import torchtoolbox.transform as transforms
 import os
+import torchtoolbox.transform as transforms
 
 # %%
 from siim_isic_melanoma_classification import (
-    net,
     io,
-    util,
     task,
     transforms as my_transforms,
 )
@@ -33,6 +31,13 @@ from siim_isic_melanoma_classification.config import get_config
 
 # %%
 config = get_config()
+
+# %%
+util.initialize(config)
+if util.is_kaggle():
+    import kaggle_timm_pretrained
+
+    kaggle_timm_pretrained.patch()
 
 # %%
 transform = transforms.Compose(
@@ -48,4 +53,16 @@ all_source, _ = io.load_my_isic2020_csv(
 )
 
 # %%
-task.train_nth_fold_gbdt(config, all_source, transform)
+experiment_name = os.environ["KAGGLE_EXPERIMENT_NAME"]
+fold_index = int(os.environ["KAGGLE_TRAIN_FOLD_INDEX"])
+n_fold = int(os.environ["KAGGLE_N_FOLD"])
+feature_layer = int(os.environ["KAGGLE_EN_FAETURE_LAYER"])
+task.train_nth_fold_gbdt(
+    config,
+    all_source,
+    transform,
+    experiment_name,
+    fold_index=fold_index,
+    n_fold=n_fold,
+    feature_layer=feature_layer,
+)
