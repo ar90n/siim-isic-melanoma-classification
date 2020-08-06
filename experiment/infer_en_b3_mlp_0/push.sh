@@ -1,6 +1,7 @@
 #/usr/local/bin/bash
 unset $(env | grep KKT | awk -F = '{print $1}')
 
+#export KKT_KAGGLE_GPUS=1
 export KKT_KAGGLE_TPUS=1
 export KKT_KAGGLE_BATCH_SIZE=64
 export KKT_KAGGLE_IMAGE_SIZE=384

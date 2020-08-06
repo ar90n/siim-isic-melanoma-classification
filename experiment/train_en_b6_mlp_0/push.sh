@@ -5,7 +5,8 @@ unset $(env | grep KKT | awk -F = '{print $1}')
 
 export KKT_KAGGLE_MAX_EPOCHS=12
 export KKT_KAGGLE_LEARNING_RATE=0.001
-export KKT_KAGGLE_GPUS=1
+#export KKT_KAGGLE_GPUS=1
+export KKT_KAGGLE_TPUS=1
 export KKT_KAGGLE_BATCH_SIZE=32
 export KKT_KAGGLE_IMAGE_SIZE=256
 export KKT_KAGGLE_LABEL_SMOOTHING=0.15
@@ -19,4 +20,4 @@ export KKT_WANDB_PROJECT=isic2020_train_en_b6_mlp
 
 PROJ_ROOT=$(python -c "from pathlib import Path; print(str(Path('$0').absolute().parent.parent.parent))")
 poetry run jupytext --to notebook  ${PROJ_ROOT}/runner/train_efficientnet_b6_mlp.py
-poetry run kkt push --target .train_en_b6_mlp
+poetry run kkt push --target .runner.train_en_b6_mlp
