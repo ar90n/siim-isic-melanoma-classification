@@ -17,7 +17,7 @@ scikit-learn = "^0.23.1"
 imageio = "^2.9.0"
 numpy = "^1.19.0"
 wandb = "^0.9.3"
-#apex = {git = "https://github.com/NVIDIA/apex"}
+apex = {git = "https://github.com/NVIDIA/apex"}
 cloud-tpu-client = "^0.10"
 comet-ml = "^3.1.14"
 category_encoders = "^2.2.2"
