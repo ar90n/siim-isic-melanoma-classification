@@ -51,10 +51,13 @@ def _build_en_mlp_class(model_level: int):
             y = self.meta(y)
             return torch.cat((x, y), dim=1)
 
-        def forward(self, inputs):
-            features = self.features(inputs)
+        def classify(self, features):
             output = self._classifier(features)
             return output.view(output.size(0), -1)
+
+        def forward(self, inputs):
+            features = self.features(inputs)
+            return self.classify(features)
 
     return _c
 

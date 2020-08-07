@@ -176,25 +176,42 @@ class Trainer(Trainer):
 
 
 class Classifier:
-    def __init__(self, model, tta_epochs=1, device=None):
+    def __init__(self, model, tta_epochs=1, device=None, with_features=False):
         self.tta_epochs = tta_epochs
         self.device = get_device() if device is None else device
         self.model = model.eval().to(self.device)
+        self._with_features = with_features
 
     def predict(self, data_loader):
         clean_up()
 
+        all_predicts = []
+        all_features = []
         with torch.no_grad():
-            all_predicts = [
-                self._predict_once(data_loader) for _ in range(self.tta_epochs)
-            ]
-            return torch.stack(all_predicts).mean(0).cpu().numpy()
+            for _ in range(self.tta_epochs):
+                pred, feature = self._predict_once(data_loader)
+                all_predicts.append(pred)
+                all_features.append(feature)
+
+        avg_predicts = torch.stack(all_predicts).mean(0).cpu().numpy()
+        stack_features = torch.stack(all_features).cpu().numpy()
+
+        if self._with_features:
+            return avg_predicts, stack_features
+        return avg_predicts
 
     def _predict_once(self, data_loader):
-        device = (
+        agg_device = (
             self.device if self.device.type.startswith("cuda") else torch.device("cpu")
         )
-        result = [
-            torch.sigmoid(self.model(to_device(x))).to(device) for x in data_loader
-        ]
-        return torch.cat(result)
+
+        features = []
+        results = []
+        for x in data_loader:
+            x = to_device(x)
+            feature = self.model.features(x)
+            logit = self.model.classify(feature)
+            result = torch.sigmoid(logit)
+            features.append(feature.to(agg_device))
+            results.append(result.to(agg_device))
+        return torch.cat(results), torch.cat(features)

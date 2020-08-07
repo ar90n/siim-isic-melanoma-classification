@@ -1,4 +1,4 @@
-import import pdb; pdb.set_trace()
+import sys
 import json
 from typing import cast
 
@@ -56,6 +56,7 @@ def infer_val_tta(config: Config, all_source: DataSource, transforms, experiment
     experiment = json.load(experiment_index_path.open("r"))
 
     inferences = []
+    features = []
     model_type = experiment["model_type"]
     for ckpt in experiment["checkpoints"]:
         fold_index = ckpt["fold_index"]
@@ -77,10 +78,27 @@ def infer_val_tta(config: Config, all_source: DataSource, transforms, experiment
         )
 
         model = load_from_checkpoint(model_type, ckpt_path)
-        target = Classifier(model, tta_epochs=config.tta_epochs).predict(val_loader)
+        target, feature = Classifier(
+            model, tta_epochs=config.tta_epochs, with_features=True
+        ).predict(val_loader)
+
         inference = pd.concat(
             [label, pd.DataFrame({"target": target.ravel()}, index=label.index)], axis=1
         )
         inferences.append(inference)
+
+        if feature is not None:
+            concat_feature = pd.concat(
+                [
+                    pd.DataFrame([pd.DataFrame(f).values.tolist()])
+                    for f in np.transpose(feature, [1, 0, 2])
+                ]
+            )
+            concat_feature.index = label.index
+            feature = pd.concat([label, concat_feature], axis=1)
+            features.append(feature)
     result = pd.concat(inferences, axis=0)
     result.to_csv(f"cv_val_{model_type}.csv", index=False)
+
+    feature_result = pd.concat(features, axis=0)
+    feature_result.to_pickle(f"embedding_val_{model_type}.pickle")
