@@ -78,5 +78,6 @@ def load_from_checkpoint(model_name, path_to_cktp: Path) -> LightningModelBase:
         EfficientNetB2MLP.name: EfficientNetB2MLP,
         EfficientNetB3MLP.name: EfficientNetB3MLP,
         EfficientNetB4MLP.name: EfficientNetB4MLP,
+        EfficientNetB5MLP.name: EfficientNetB5MLP,
         EfficientNetB6MLP.name: EfficientNetB6MLP,
     }[model_name].load_from_checkpoint(str(path_to_cktp))
