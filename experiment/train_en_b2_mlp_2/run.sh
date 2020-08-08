@@ -20,4 +20,4 @@ export KAGGLE_MODEL_NAME=en_b2_mlp
 #export KAGGLE_SANITY_CHECK=1
 
 PROJ_ROOT=$(python -c "from pathlib import Path; print(str(Path('$0').absolute().parent.parent.parent))")
-poetry run python ${PROJ_ROOT}/runner/runner/train_efficientnet_mlp.py
+poetry run python ${PROJ_ROOT}/runner/train_efficientnet_mlp.py
