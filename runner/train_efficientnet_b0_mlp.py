@@ -62,6 +62,7 @@ all_source, _ = io.load_my_isic2020_csv(
 # %%
 fold_index = int(os.environ["KAGGLE_TRAIN_FOLD_INDEX"])
 n_fold = int(os.environ["KAGGLE_N_FOLD"])
+experiment_name = os.environ.get("KAGGLE_EXPERIMENT_NAME")
 task.train_nth_fold(
     EfficientNetB0MLP,
     config,
@@ -69,4 +70,5 @@ task.train_nth_fold(
     train_transform,
     fold_index=fold_index,
     n_fold=n_fold,
+    experiment_name=experiment_name
 )

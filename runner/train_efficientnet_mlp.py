@@ -26,10 +26,10 @@ from siim_isic_melanoma_classification import (
     io,
     util,
     task,
+    net,
     transforms as my_transforms,
 )
 from siim_isic_melanoma_classification.config import get_config
-from siim_isic_melanoma_classification.net import EfficientNetB2MLP
 
 # %%
 config = get_config()
@@ -62,13 +62,16 @@ all_source, _ = io.load_my_isic2020_csv(
 # %%
 fold_index = int(os.environ["KAGGLE_TRAIN_FOLD_INDEX"])
 n_fold = int(os.environ["KAGGLE_N_FOLD"])
+model_name = os.environ["KAGGLE_MODEL_NAME"]
 experiment_name = os.environ.get("KAGGLE_EXPERIMENT_NAME")
+
+model_class = net.get_model_class(model_name)
 task.train_nth_fold(
-    EfficientNetB2MLP,
+    model_class,
     config,
     all_source,
     train_transform,
     fold_index=fold_index,
     n_fold=n_fold,
-    experiment_name=experiment_name
+    experiment_name=experiment_name,
 )

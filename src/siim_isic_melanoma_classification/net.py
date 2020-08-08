@@ -70,8 +70,7 @@ EfficientNetB4MLP = _build_en_mlp_class(4)
 EfficientNetB5MLP = _build_en_mlp_class(5)
 EfficientNetB6MLP = _build_en_mlp_class(6)
 
-
-def load_from_checkpoint(model_name, path_to_cktp: Path) -> LightningModelBase:
+def get_model_class(model_name):
     return {
         EfficientNetB0MLP.name: EfficientNetB0MLP,
         EfficientNetB1MLP.name: EfficientNetB1MLP,
@@ -80,4 +79,7 @@ def load_from_checkpoint(model_name, path_to_cktp: Path) -> LightningModelBase:
         EfficientNetB4MLP.name: EfficientNetB4MLP,
         EfficientNetB5MLP.name: EfficientNetB5MLP,
         EfficientNetB6MLP.name: EfficientNetB6MLP,
-    }[model_name].load_from_checkpoint(str(path_to_cktp))
+    }[model_name]
+
+def load_from_checkpoint(model_name, path_to_cktp: Path) -> LightningModelBase:
+    return get_model_class(model_name).load_from_checkpoint(str(path_to_cktp))
