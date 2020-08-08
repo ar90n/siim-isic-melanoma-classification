@@ -124,14 +124,20 @@ class Net(LightningModelBase):
             Swish(),
             nn.Dropout(p=0.2),
         )
-        self.ouput = nn.Linear(500 + 250, 1)
+        self._classifier = nn.Linear(500 + 250, 1)
 
     def forward(self, inputs):
+        features = self.features(inputs)
+        return self.classify(features)
+
+    def features(self, inputs):
         x, y = inputs
         x = self.backbone(x)
         y = self.meta(y)
-        features = torch.cat((x, y), dim=1)
-        output = self.ouput(features)
+        return torch.cat((x, y), dim=1)
+
+    def classify(self, features):
+        output = self._classifier(features)
         return output.view(output.size(0), -1)
 
 

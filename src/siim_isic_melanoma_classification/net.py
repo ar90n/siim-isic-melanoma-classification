@@ -1,11 +1,28 @@
 from pathlib import Path
+from itertools import islice
 
 import timm
+import torch
 from torch import nn
 from torchtoolbox.nn import Swish
-import torch
 
 from .lightning import LightningModelBase
+from .util import get_device
+
+
+def create_ef_lowlevel_features_model(model: LightningModelBase, output_layer: int = 5):
+    class _Model(nn.Module):
+        def __init__(self, backbone, n: int):
+            super().__init__()
+            self._layers = backbone.as_sequential()[:n]
+
+        def forward(self, inputs):
+            x, _ = inputs
+            for l in self._layers:
+                x = l(x)
+            return x.flatten(start_dim=1)
+
+    return _Model(model._backbone, output_layer)
 
 
 def _build_en_mlp_class(model_level: int):

@@ -22,6 +22,7 @@ cloud-tpu-client = "^0.10"
 comet-ml = "^3.1.14"
 category_encoders = "^2.2.2"
 jpeg2dct = "^0.2.4"
+xgboost = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"
@@ -70,6 +71,10 @@ slug = "siim-isic-melanoma-classification"
 
     [tool.kkt.meta_data.runner.infer_test_tta]
     code_file = "runner/infer_test_tta.ipynb"
+
+    [tool.kkt.meta_data.runner.train_xgboost_meta]
+    code_file = "runner/train_xgboost_meta.ipynb"
+    enable_gpu = false
 
 [build-system]
 requires = ["poetry>=0.12"]

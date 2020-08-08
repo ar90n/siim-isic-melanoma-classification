@@ -142,3 +142,12 @@ class Microscope:
 
     def __repr__(self):
         return f'{self.__class__.__name__}(p={self.p})'
+
+
+class FlattenDctCoeff:
+    def __init__(self):
+        pass
+
+    def __call__(self, dct_coeffs):
+        luma, cb, cy = dct_coeffs
+        return luma.ravel()
