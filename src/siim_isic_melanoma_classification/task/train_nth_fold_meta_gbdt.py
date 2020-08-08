@@ -1,4 +1,6 @@
 from dataclasses import asdict
+import pickle
+from pathlib import Path
 
 import numpy as np
 import xgboost as xgb
@@ -43,10 +45,10 @@ def train_nth_fold_meta_gbdt(
         early_stopping_rounds=64,
         callbacks=[wandb_callback()],
     )
-    y_hat = clf.predict_proba(x_val)[:,1]
+    y_hat = clf.predict_proba(x_val)[:, 1]
 
     auc = roc_auc_score(y_val, y_hat)
     print(f"auc: {auc}")
 
-    model_name = f"fold_{fold_index}_{n_fold}_val_auc_{auc}.model"
-    clf.save_model(model_name)
+    model_name = f"fold_{fold_index}_{n_fold}_val_auc_{auc}.pickle"
+    pickle.dump(clf, Path(model_name).open("wb"))
