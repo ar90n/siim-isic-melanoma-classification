@@ -10,6 +10,36 @@ from jpeg2dct.numpy import load as dct_load
 from .datasource import DataSource
 
 
+class MetaDataset(Dataset):
+    def __init__(
+        self, source: DataSource, train: bool = True, meta_features=None,
+    ):
+        self.source = source
+        self.train = train
+
+        if meta_features is None:
+            self.meta_features = self.get_one_hot_encoding_columns()
+        else:
+            self.meta_features = meta_features
+
+    def __getitem__(self, index):
+        meta = np.array(
+            self.source.df.iloc[index][self.meta_features].values, dtype=np.float32
+        )
+        if self.train:
+            y = self.source.df.iloc[index]["target"]
+            return meta, y
+        else:
+            return meta
+
+    def __len__(self):
+        return len(self.source.df)
+
+    @classmethod
+    def get_one_hot_encoding_columns(cls):
+        return ["sex", "age_approx", "anatom_site_general_challenge"]
+
+
 class MelanomaDataset(Dataset):
     def __init__(
         self,
@@ -25,7 +55,7 @@ class MelanomaDataset(Dataset):
         self.dct = dct
 
         if meta_features is None:
-            self.meta_features = self.get_one_hot_encoding_columns(source)
+            self.meta_features = self.get_one_hot_encoding_columns()
         else:
             self.meta_features = meta_features
 
@@ -62,7 +92,15 @@ class MelanomaDataset(Dataset):
             return self.source.roots[self.source.df.iloc[index]["dataset"]]
 
     @classmethod
-    def get_one_hot_encoding_columns(cls, source: DataSource):
-        return ["sex", "age_approx"] + [
-            col for col in source.df.columns if col.startswith("site_")
+    def get_one_hot_encoding_columns(cls):
+        return [
+            "sex",
+            "age_approx",
+            "site_head/neck",
+            "site_lower extremity",
+            "site_oral/genital",
+            "site_palms/soles",
+            "site_torso",
+            "site_upper extremity",
+            "site_nan",
         ]

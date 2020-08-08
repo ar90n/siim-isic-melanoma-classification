@@ -23,11 +23,40 @@ def _preprop(
         ],
         ignore_index=True,
     )
+
+    # site_head/neck site_lower extremity  site_oral/genital  site_palms/soles  site_torso  site_upper extremity  site_nan
+
+    anatom_codes = {
+        "head/neck": 1,
+        "upper extremity": 2,
+        "lower extremity": 3,
+        "torso": 4,
+        "palms/soles": 5,
+        "oral/genital": 6,
+    }
+    concat[~concat.isin(anatom_codes)] = np.nan
     dummies = pd.get_dummies(concat, dummy_na=True, dtype=np.uint8, prefix="site")
+
+    required_columns = [
+        "site_head/neck",
+        "site_upper extremity",
+        "site_lower extremity",
+        "site_torso",
+        "site_palms/soles",
+        "site_oral/genital",
+        "site_abs",
+    ]
+    diff_columns = set(required_columns) - set(dummies.columns)
+    dummies[list(diff_columns)] = 0
+
+    concat = concat.replace(anatom_codes).fillna(0)
+
     train_df = pd.concat([train_df, dummies.iloc[: train_df.shape[0]]], axis=1)
+    train_df["anatom_site_general_challenge"] = concat[: train_df.shape[0]]
     test_df = pd.concat(
         [test_df, dummies.iloc[train_df.shape[0] :].reset_index(drop=True)], axis=1
     )
+    test_df["anatom_site_general_challenge"] = concat[train_df.shape[0] :]
 
     # Sex features
     train_df["sex"] = train_df["sex"].map({"male": 1.0, "female": 0.0, "unknown": 0.5})
