@@ -47,7 +47,8 @@ def _preprop(
         "site_abs",
     ]
     diff_columns = set(required_columns) - set(dummies.columns)
-    dummies[list(diff_columns)] = 0
+    for c in diff_columns:
+        dummies[c] = 0
 
     concat = concat.replace(anatom_codes).fillna(0)
 
