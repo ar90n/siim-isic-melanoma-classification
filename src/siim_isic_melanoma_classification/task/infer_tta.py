@@ -78,8 +78,11 @@ def infer_val_tta(config: Config, all_source: DataSource, transforms, experiment
         )
 
         model = load_from_checkpoint(model_type, ckpt_path)
-        target, feature = Classifier(
-            model, tta_epochs=config.tta_epochs, with_features=True
+        target = Classifier(
+            # model, tta_epochs=config.tta_epochs, with_features=True
+            model,
+            tta_epochs=config.tta_epochs,
+            with_features=False,
         ).predict(val_loader)
 
         inference = pd.concat(
@@ -87,18 +90,18 @@ def infer_val_tta(config: Config, all_source: DataSource, transforms, experiment
         )
         inferences.append(inference)
 
-        if feature is not None:
-            concat_feature = pd.concat(
-                [
-                    pd.DataFrame([pd.DataFrame(f).values.tolist()])
-                    for f in np.transpose(feature, [1, 0, 2])
-                ]
-            )
-            concat_feature.index = label.index
-            feature = pd.concat([label, concat_feature], axis=1)
-            features.append(feature)
+        # if feature is not None:
+        #    concat_feature = pd.concat(
+        #        [
+        #            pd.DataFrame([pd.DataFrame(f).values.tolist()])
+        #            for f in np.transpose(feature, [1, 0, 2])
+        #        ]
+        #    )
+        #    concat_feature.index = label.index
+        #    feature = pd.concat([label, concat_feature], axis=1)
+        #    features.append(feature)
     result = pd.concat(inferences, axis=0)
     result.to_csv(f"cv_val_{model_type}.csv", index=False)
 
-    feature_result = pd.concat(features, axis=0)
-    feature_result.to_pickle(f"embedding_val_{model_type}.pickle")
+    # feature_result = pd.concat(features, axis=0)
+    # feature_result.to_pickle(f"embedding_val_{model_type}.pickle")
