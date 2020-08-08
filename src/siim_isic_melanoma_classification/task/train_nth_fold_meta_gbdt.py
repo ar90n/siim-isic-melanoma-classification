@@ -33,18 +33,17 @@ def train_nth_fold_meta_gbdt(
     x_val = np.stack(x_val)
     y_val = np.array(y_val)
 
-    clf = xgb.XGBClassifier(objective="binary:logistic", n_estimators=1000)
+    clf = xgb.XGBClassifier(objective="binary:logistic", n_estimators=8192)
 
-    evals_result = {}
     clf.fit(
         x_train,
         y_train,
         eval_metric="auc",
         eval_set=[(x_train, y_train), (x_val, y_val),],
-        early_stopping_rounds=10,
-        callbacks=[xgb.callback.record_evaluation(evals_result), wandb_callback()],
+        early_stopping_rounds=64,
+        callbacks=[wandb_callback()],
     )
-    y_hat = clf.predict(x_val)
+    y_hat = clf.predict_proba(x_val)[:,1]
 
     auc = roc_auc_score(y_val, y_hat)
     print(f"auc: {auc}")
