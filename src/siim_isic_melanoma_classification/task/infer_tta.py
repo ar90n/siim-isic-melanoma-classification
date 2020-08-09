@@ -5,6 +5,7 @@ from typing import cast
 import pandas as pd
 import numpy as np
 from torch.utils.data import DataLoader
+from pytorch_lightning.utilities import rank_zero_info
 
 from ..lightning import Classifier
 from ..dataset import MelanomaDataset
@@ -39,9 +40,8 @@ def infer_test_tta(
         n_fold = ckpt["n_fold"]
         ckpt_path = experiment_root / ckpt["file"]
 
-        print(
-            f"Infer test data using {str(ckpt_path)} - {fold_index} / {n_fold}",
-            file=sys.stderr,
+        rank_zero_info(
+            f"Infer test data using {str(ckpt_path)} - {fold_index} / {n_fold}"
         )
         model = load_from_checkpoint(model_type, ckpt_path)
         inference = Classifier(model, tta_epochs=config.tta_epochs).predict(test_loader)
@@ -63,9 +63,8 @@ def infer_val_tta(config: Config, all_source: DataSource, transforms, experiment
         n_fold = ckpt["n_fold"]
         ckpt_path = experiment_root / ckpt["file"]
 
-        print(
-            f"Infer val data using {str(ckpt_path)} - {fold_index} / {n_fold}",
-            file=sys.stderr,
+        rank_zero_info(
+            f"Infer val data using {str(ckpt_path)} - {fold_index} / {n_fold}"
         )
 
         _, val_source = get_folds_by(all_source, fold_index, n_fold + 1)

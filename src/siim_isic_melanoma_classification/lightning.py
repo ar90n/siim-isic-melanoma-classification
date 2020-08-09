@@ -4,6 +4,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
+from pytorch_lightning.utilities import rank_zero_info
 
 import torch
 import torch.nn.functional as F
@@ -26,6 +27,12 @@ try:
     import torch_xla.core.xla_model as xm
 except ImportError:
     pass
+
+
+if importlib.util.find_spec("ipywidgets") is not None:
+    from tqdm.auto import tqdm
+else:
+    from tqdm import tqdm
 
 
 def label_smoothing(y: torch.tensor, alpha: float) -> torch.tensor:
@@ -189,6 +196,8 @@ class Classifier:
         all_features = []
         with torch.no_grad():
             for _ in range(self.tta_epochs):
+                rank_zero_info(f"Start {i}-th tta")
+
                 pred, feature = self._predict_once(data_loader)
                 all_predicts.append(pred)
                 all_features.append(feature)
