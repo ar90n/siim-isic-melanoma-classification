@@ -44,7 +44,6 @@ def _preprop(
         "site_torso",
         "site_palms/soles",
         "site_oral/genital",
-        "site_abs",
     ]
     diff_columns = set(required_columns) - set(dummies.columns)
     for c in diff_columns:

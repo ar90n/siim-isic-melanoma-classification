@@ -69,12 +69,24 @@ slug = "siim-isic-melanoma-classification"
     [tool.kkt.meta_data.runner.train_en_mlp]
     code_file = "runner/train_efficientnet_mlp.ipynb"
 
-    [tool.kkt.meta_data.runner.infer_test_tta]
-    code_file = "runner/infer_test_tta.ipynb"
+    [tool.kkt.meta_data.runner.infer_tta]
+    code_file = "runner/infer_tta.ipynb"
 
     [tool.kkt.meta_data.runner.train_xgboost_meta]
     code_file = "runner/train_xgboost_meta.ipynb"
     enable_gpu = false
+
+    [tool.kkt.meta_data.runner.train_xgboost_dct]
+    code_file = "runner/train_xgboost_dct.ipynb"
+    enable_gpu = false
+    prologue="""
+!rm /opt/conda/lib/libjpeg*
+!cp /usr/lib/x86_64-linux-gnu/libjpeg* /opt/conda/lib/
+"""
+
+    [tool.kkt.meta_data.runner.train_en_mlp_2019]
+    code_file = "runner/train_efficientnet_mlp_2019.ipynb"
+
 
 [build-system]
 requires = ["poetry>=0.12"]

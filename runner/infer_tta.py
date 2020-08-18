@@ -60,4 +60,4 @@ all_source, test_source = io.load_my_isic2020_csv(
 # %%
 experiment_name = os.environ["KAGGLE_EXPERIMENT_NAME"]
 task.infer_test_tta(config, test_source, train_transform, experiment_name)
-task.infer_val_tta(config, all_source, train_transform, experiment_name)
+#task.infer_val_tta(config, all_source, train_transform, experiment_name)

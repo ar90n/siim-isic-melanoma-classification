@@ -26,10 +26,10 @@ from siim_isic_melanoma_classification import (
     io,
     util,
     task,
+    net,
     transforms as my_transforms,
 )
 from siim_isic_melanoma_classification.config import get_config
-from siim_isic_melanoma_classification.net import EfficientNetB0MLP
 
 # %%
 config = get_config()
@@ -47,8 +47,7 @@ train_transform = transforms.Compose(
         transforms.RandomResizedCrop(size=config.image_size, scale=(0.8, 1.0)),
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
-        my_transforms.AdvancedHairAugmentation(hairs_folder="../input/melanoma-hairs"),
-        my_transforms.Microscope(p=0.2),
+        my_transforms.Microscope(p=0.5),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ]
@@ -59,17 +58,16 @@ train_transform = transforms.Compose(
 all_source, _ = io.load_my_isic2020_csv(
     size=config.image_size, is_sanity_check=config.sanity_check
 )
+print(len(all_source))
+all_source.df = all_source.df[all_source.df["dataset"] == "isic2019"]
+print(len(all_source))
 
 # %%
-fold_index = int(os.environ["KAGGLE_TRAIN_FOLD_INDEX"])
-n_fold = int(os.environ["KAGGLE_N_FOLD"])
-experiment_name = os.environ.get("KAGGLE_EXPERIMENT_NAME")
-task.train_nth_fold(
-    EfficientNetB0MLP,
+model_name = os.environ["KAGGLE_MODEL_NAME"]
+model_class = net.get_model_class(model_name)
+task.train_split_val(
+    model_class,
     config,
     all_source,
     train_transform,
-    fold_index=fold_index,
-    n_fold=n_fold,
-    experiment_name=experiment_name
 )

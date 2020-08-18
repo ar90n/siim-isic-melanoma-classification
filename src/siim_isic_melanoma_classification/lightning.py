@@ -29,12 +29,6 @@ except ImportError:
     pass
 
 
-if importlib.util.find_spec("ipywidgets") is not None:
-    from tqdm.auto import tqdm
-else:
-    from tqdm import tqdm
-
-
 def label_smoothing(y: torch.tensor, alpha: float) -> torch.tensor:
     return y.float() * (1 - alpha) + 0.5 * alpha
 
@@ -195,7 +189,7 @@ class Classifier:
         all_predicts = []
         all_features = []
         with torch.no_grad():
-            for _ in range(self.tta_epochs):
+            for i in range(self.tta_epochs):
                 rank_zero_info(f"Start {i}-th tta")
 
                 pred, feature = self._predict_once(data_loader)

@@ -77,7 +77,7 @@ class DrawHair:
         width (tuple): possible width of the hair in pixels
     """
 
-    def __init__(self, hairs:int = 4, width:tuple = (1, 2)):
+    def __init__(self, hairs: int = 4, width: tuple = (1, 2)):
         self.hairs = hairs
         self.width = width
 
@@ -91,21 +91,23 @@ class DrawHair:
         """
         if not self.hairs:
             return img
-        
+
         width, height, _ = img.shape
-        
+
         for _ in range(random.randint(0, self.hairs)):
             # The origin point of the line will always be at the top half of the image
             origin = (random.randint(0, width), random.randint(0, height // 2))
-            # The end of the line 
+            # The end of the line
             end = (random.randint(0, width), random.randint(0, height))
             color = (0, 0, 0)  # color of the hair. Black.
-            cv2.line(img, origin, end, color, random.randint(self.width[0], self.width[1]))
-        
+            cv2.line(
+                img, origin, end, color, random.randint(self.width[0], self.width[1])
+            )
+
         return img
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(hairs={self.hairs}, width={self.width})'
+        return f"{self.__class__.__name__}(hairs={self.hairs}, width={self.width})"
 
 
 class Microscope:
@@ -129,25 +131,104 @@ class Microscope:
             PIL Image: Image with transformation.
         """
         if random.random() < self.p:
-            circle = cv2.circle((np.ones(img.shape) * 255).astype(np.uint8), # image placeholder
-                        (img.shape[0]//2, img.shape[1]//2), # center point of circle
-                        random.randint(img.shape[0]//2 - 3, img.shape[0]//2 + 15), # radius
-                        (0, 0, 0), # color
-                        -1)
+            circle = cv2.circle(
+                (np.ones(img.shape) * 255).astype(np.uint8),  # image placeholder
+                (img.shape[0] // 2, img.shape[1] // 2),  # center point of circle
+                random.randint(img.shape[0] // 2 - 3, img.shape[0] // 2 + 15),  # radius
+                (0, 0, 0),  # color
+                -1,
+            )
 
             mask = circle - 255
             img = np.multiply(img, mask)
-        
+
         return img
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(p={self.p})'
+        return f"{self.__class__.__name__}(p={self.p})"
 
 
-class FlattenDctCoeff:
-    def __init__(self):
-        pass
+class ZigZagFlatten:
+    def __init__(self, features=64):
+        self._features = features
 
-    def __call__(self, dct_coeffs):
-        luma, cb, cy = dct_coeffs
-        return luma.ravel()
+    def __call__(self, components):
+        ZIGZAG_ORDER = [
+            0,
+            1,
+            8,
+            16,
+            9,
+            2,
+            3,
+            10,
+            17,
+            24,
+            32,
+            25,
+            18,
+            11,
+            4,
+            5,
+            12,
+            19,
+            26,
+            33,
+            40,
+            48,
+            41,
+            34,
+            27,
+            20,
+            13,
+            6,
+            7,
+            14,
+            21,
+            28,
+            35,
+            42,
+            49,
+            56,
+            57,
+            50,
+            43,
+            36,
+            29,
+            22,
+            15,
+            23,
+            30,
+            37,
+            44,
+            51,
+            58,
+            59,
+            52,
+            45,
+            38,
+            31,
+            39,
+            46,
+            53,
+            60,
+            61,
+            54,
+            47,
+            55,
+            62,
+            63,
+        ]
+        cbcr_mcu_step = int(2 * components[1].shape[0] / components[0].shape[0])
+        return np.hstack(
+            [
+                components[0][:, :, ZIGZAG_ORDER[: self._features]].ravel(),
+                components[1][
+                    ::cbcr_mcu_step, ::cbcr_mcu_step, ZIGZAG_ORDER[: self._features]
+                ].ravel(),
+                components[2][
+                    ::cbcr_mcu_step, ::cbcr_mcu_step, ZIGZAG_ORDER[: self._features]
+                ].ravel(),
+            ]
+        )
+
